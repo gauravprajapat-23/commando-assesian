@@ -83,3 +83,18 @@ At each cycle: read this MD and active GitHub Issues/PRs; schedule only dependen
 **Master integration backlog:** Wire Island 01 world, player, guard spawning, mission controller and HUD using only master-owned files. Execute actual Godot 4 integrated play loop: beach spawn → traverse → guard encounter → objective → extraction; test failure/invalid extraction too. Update issues and coordination only after execution evidence.
 
 **Proposed Cycle 02 (not yet dispatched):** Island 01 stability and integration regressions first; then WORLD-002, PLAYER-002, AI-002, UI-002, SAVE-001 as dependencies permit.
+
+## Cycle 01 verification — 2026-11-20
+
+All four worker PRs target `dev` and all 17 changed files are within their owner’s paths. The four PRs were drafts with no recorded reviews, inline review threads or combined commit statuses at verification. The current cycle had no new worker-chat dispatch.
+
+| Workstream | PR and verified head | Execution result | Next gate |
+|---|---|---|---|
+| `world` | #5 (`8ac5936`) | World contract passed (exit 0, 39 solid colliders). | Review the island visually and verify traversal from beach to outpost and extraction with the player. Provide a navigation region if navigation mode is enabled. |
+| `player-combat` | #6 (`6bd1fc9`) | Player focused test passed (exit 0). | At integration set the weapon ray mask to include guard layer 2 and geometry layer 1. Bind HUD signals before the player emits its initial values. |
+| `enemy-ai` | #7 (`c020df6`) | Guard suite failed to parse (exit 1) at line 94: array `deaths` compared to an integer. After a local correction, the suite reached line 60 and rejected the untyped patrol array. | Fix both test issues in the enemy-owned test and rerun. Test target injection and patrol routes on the island. Keep direct steering until a navigation region is available. |
+| `missions-ui` | #8 (`2e4d1bd`) | Mission controller and HUD focused tests passed (both exit 0). | Wait for world and player integration. Bind injected state, map objective and extraction markers to progression, and route player death to mission failure. |
+
+Godot 4.6.3 headless. Original `dev` main scene fails to load because its three child nodes omit `parent="."`. A local correction loaded the bootstrap cleanly in all four snapshots.
+
+Re-run the focused suites against the latest candidate commits before merging. Once the bootstrap PR is approved and merged to `dev`, review and merge eligible worker PRs one at a time, rechecking each against the updated base. Hold guard AI for a passing rerun and wire missions only after the world and player contracts land. Guard navigation and player/guard collision masks need an integrated check. Run the beach-to-extraction playthrough and the player-death and premature-extraction cases before closing acceptance.
