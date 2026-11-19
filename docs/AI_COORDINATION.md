@@ -127,3 +127,23 @@ The repository owner explicitly authorized merges for #5, #6 and #8. GitHub reje
 ### Cycle 02 queue
 
 Begin after #10 acceptance. First verify a clean rendered keyboard/mouse session, reproducible startup and mission replay, and a stable HUD at common resolutions. Then scope Android touch controls and safe-area checks under UI-002. Defer new islands, enemy expansions, and equipment until the Island 01 baseline is accepted.
+
+## Island 01 final acceptance checkpoint — 2026-11-20
+
+Candidate heads: #7 `a2dade3afc4d172238881ea5104ba61f5a45ea76`; #11 `8a46cfb1e8c8598f91cbef2532e5320ab476e8e5`.
+
+Godot 4.6.3: clean headless import and startup, five focused suites and all ten integration checks exited 0. The guard suite passed all 13 assertions. A supplemental check killed a spawned guard with five player hits, observed one death signal, and confirmed no post-death damage.
+
+Rendered desktop at 1152×648 using OpenGL 4.5 Mesa llvmpipe. Keyboard sprint and mouse fire exercised the actual game. At the extraction beacon before the objective the HUD still said “Infiltrate the enemy outpost” (100 health, 30 / 90 ammo). The outpost showed “Objective complete — reach extraction” (90 health). A separate run showed “Mission failed” at 0 health. The successful run showed “Mission complete — extracted” at the beacon (50 health, 28 / 90 ammo). Screenshots captured during the desktop session. V-Sync was unavailable and ALSA fell back to dummy audio in the test environment; audio was unverified.
+
+The tested candidate combined the current dev runtime tree, exact #7 head, and exact #11 wiring. #7 has no independent approval, so it remains unmerged. #11 stays draft until #7 lands and the actual post-merge tree is revalidated. #11 then needs its own approval.
+
+### Cycle 02 backlog — hold until Island 01 acceptance
+
+| Task | Scope and acceptance |
+|---|---|
+| WORLD-002 | Build a second island with its own layout and marker validation. Prove mission selection loads the correct island and spawn set. |
+| PLAYER-002 | Add weapon definitions and one alternate weapon. Cover switching, per-weapon ammo, reload and HUD updates. |
+| AI-002 | Improve patrol navigation and target reacquisition around cover. Verify LOS, loss/reacquisition, and no post-death attacks. |
+| UI-002 | Add touch movement, aim, fire and reload using injected player input. Check safe areas, pause/input reset and a real Android device. |
+| GAME-002 | Define mission progression and unlocks across islands. Verify completion, retry, replay, and persistence. |
