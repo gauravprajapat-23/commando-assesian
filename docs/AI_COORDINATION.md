@@ -147,3 +147,17 @@ The tested candidate combined the current dev runtime tree, exact #7 head, and e
 | AI-002 | Improve patrol navigation and target reacquisition around cover. Verify LOS, loss/reacquisition, and no post-death attacks. |
 | UI-002 | Add touch movement, aim, fire and reload using injected player input. Check safe areas, pause/input reset and a real Android device. |
 | GAME-002 | Define mission progression and unlocks across islands. Verify completion, retry, replay, and persistence. |
+
+## Island 01 release gate — 2026-11-20
+
+Release-gate recheck against `dev` `b61dc617799b2529d3c591cedb6613ec21ec42c0`: #7 `a2dade3afc4d172238881ea5104ba61f5a45ea76` remains mergeable, all four changed files are enemy-owned, and Godot 4.6.3 import, startup and all 13 guard assertions passed (exit 0). GitHub shows a comment review and no formal independent approval. No merge performed. #11 `8a46cfb1e8c8598f91cbef2532e5320ab476e8e5` remains draft. Prior combined-candidate results stand; post-merge reruns and rendered acceptance on the synchronized branch await #7.
+
+Prior rendered evidence covers keyboard/mouse, early extraction rejection, success, HUD changes and player death at 1152×648. Supplemental headless combat verified guard death and no post-death damage. Audio used a dummy device, V-Sync was unavailable, and collision verification covered the tested route and guard LOS obstruction. Other display configurations and broader collision coverage remain unverified.
+
+Cycle 02 issues are assigned by branch and blocked by #10. UI-002 and GAME-002 share `missions-ui` and should be coordinated before work starts.
+
+- [#12 WORLD-002 — Island 02 layout and spawn contracts](https://github.com/gauravprajapat-23/commando-assesian/issues/12) — `world`
+- [#13 PLAYER-002 — Weapon definitions and switching](https://github.com/gauravprajapat-23/commando-assesian/issues/13) — `player-combat`
+- [#14 AI-002 — Guard navigation and reacquisition](https://github.com/gauravprajapat-23/commando-assesian/issues/14) — `enemy-ai`
+- [#16 UI-002 — Mobile controls and safe areas](https://github.com/gauravprajapat-23/commando-assesian/issues/16) — `missions-ui`
+- [#15 GAME-002 — Mission unlocks and progression](https://github.com/gauravprajapat-23/commando-assesian/issues/15) — `missions-ui`
