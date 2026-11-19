@@ -1,6 +1,7 @@
 extends SceneTree
 ## Execute: godot --headless --path . --script res://tests/enemies/guard_ai_test.gd
 const GUARD_SCENE := preload("res://scenes/enemies/guard.tscn")
+const GUARD_SCRIPT := preload("res://scripts/enemies/guard.gd")
 var failures := 0
 
 class DummyTarget:
@@ -62,33 +63,33 @@ func _run() -> void:
 	first.position = Vector3.ZERO
 	guard._patrol(0.016)
 	_assert(guard.patrol_index == 1, "patrol advances at waypoint")
-	var alerted_count := 0
-	guard.alerted.connect(func(_node: Node3D) -> void: alerted_count += 1)
+	var alerted_count := [0]
+	guard.alerted.connect(func(_node: Node3D) -> void: alerted_count[0] += 1)
 	guard._become_alert()
-	_assert(guard.state == guard.State.CHASE and alerted_count == 1, "alert transition and signal")
+	_assert(guard.state == GUARD_SCRIPT.State.CHASE and alerted_count[0] == 1, "alert transition and signal")
 	guard.target_lost_seconds = 0.05
 	guard.search_seconds = 0.05
 	guard.set_target(null)
 	guard.target_group = &""
 	guard._physics_process(0.06)
-	_assert(guard.state == guard.State.SEARCH, "target loss transitions into search")
+	_assert(guard.state == GUARD_SCRIPT.State.SEARCH, "target loss transitions into search")
 	guard._physics_process(0.06)
-	_assert(guard.state == guard.State.PATROL, "search returns to patrol")
+	_assert(guard.state == GUARD_SCRIPT.State.PATROL, "search returns to patrol")
 	guard.set_target(target)
-	guard.state = guard.State.ATTACK
+	guard.state = GUARD_SCRIPT.State.ATTACK
 	guard._attack_time = 0.0
 	guard._try_attack()
 	_assert(target.damage_received > 0.0, "attack damages valid visible target")
-	var attacks := 0
-	guard.attack_performed.connect(func(_node: Node3D, _amount: float) -> void: attacks += 1)
-	var deaths := 0
-	guard.died.connect(func() -> void: deaths += 1)
+	var attacks := [0]
+	guard.attack_performed.connect(func(_node: Node3D, _amount: float) -> void: attacks[0] += 1)
+	var deaths := [0]
+	guard.died.connect(func() -> void: deaths[0] += 1)
 	guard.take_damage(guard.health + 1.0)
 	guard._attack_time = 0.0
 	guard._try_attack()
 	guard._physics_process(0.5)
-	_assert(guard.state == guard.State.DEAD and deaths == 1, "lethal damage emits died once")
-	_assert(attacks == 0, "no attacks after death")
+	_assert(guard.state == GUARD_SCRIPT.State.DEAD and deaths[0] == 1, "lethal damage emits died once")
+	_assert(attacks[0] == 0, "no attacks after death")
 	guard.take_damage(10.0)
 	_assert(deaths == 1, "dead guard cannot die twice")
 	root.queue_free()
