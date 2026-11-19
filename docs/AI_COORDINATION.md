@@ -98,3 +98,18 @@ All four worker PRs target `dev` and all 17 changed files are within their owner
 Godot 4.6.3 headless. Original `dev` main scene fails to load because its three child nodes omit `parent="."`. A local correction loaded the bootstrap cleanly in all four snapshots.
 
 Re-run the focused suites against the latest candidate commits before merging. Once the bootstrap PR is approved and merged to `dev`, review and merge eligible worker PRs one at a time, rechecking each against the updated base. Hold guard AI for a passing rerun and wire missions only after the world and player contracts land. Guard navigation and player/guard collision masks need an integrated check. Run the beach-to-extraction playthrough and the player-death and premature-extraction cases before closing acceptance.
+
+## Cycle 01 post-bootstrap verification — 2026-11-20
+
+PR #9 merged into `dev` at `ebdbcfe9cc7649b45c3b134d88cefd79358c8182` after a clean Godot 4.6.3 headless import and startup at the approved head. All four worker snapshots also imported and started cleanly with the merged bootstrap.
+
+| PR | Verified worker head | Status and next action |
+|---|---|---|
+| #5 | `8ac5936` | World contract passed (exit 0, 39 solid colliders). Ready for maintainer review. Verify visible landmarks and player traversal in the integrated Island 01 playthrough (#10). |
+| #6 | `6bd1fc9` | Player controller and combat suite passed (exit 0). Ready for maintainer review. Master will include world layer 1 and guard layer 2 in the player's hitscan mask and verify actual guard hits in #10. |
+| #7 | `c020df6` | Published head remains blocked. In `tests/enemies/guard_ai_test.gd`, compare `deaths[0]` to `1` (line 94), and assign an explicitly typed `Array[NodePath]` to `guard.patrol_points` (line 60). The original suite exits 1. Applying both fixes in a local diagnostic copy passed all 13 assertions, exit 0. Commit these corrections on `enemy-ai` and rerun the original focused script at the new PR head before requesting approval. |
+| #8 | `2e4d1bd` | Mission and HUD suites both passed (exit 0 each). Ready for maintainer review. Merge after world and player land. Bind HUD signals before player initialization and route objective, extraction, and death in #10. |
+
+All worker PRs remain drafts with no recorded approval. Merge approved worker PRs one at a time into `dev` and recheck the updated base after each merge. Merge the world and player contracts before the mission PR. Verify and approve the guard fixes separately.
+
+[INTEGRATION-001 #10](https://github.com/gauravprajapat-23/commando-assesian/issues/10) tracks Master-owned wiring and acceptance. The full playthrough, early extraction, player death, guard interaction, and HUD checks remain pending.
