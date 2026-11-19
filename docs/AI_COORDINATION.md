@@ -60,8 +60,26 @@ Worker branch names are top-level because Git cannot have both a `dev` ref and r
 
 At each cycle: read this MD and active GitHub Issues/PRs; schedule only dependency-ready tasks; send one scoped assignment per worker chat; capture test/PR evidence; review diffs; merge approved PRs into `dev` only; update issue status and coordination file; choose next unfinished tasks. A worker's natural-language completion report alone is not verification. Stop on conflicts or uncertain execution rather than guessing.
 
-## Current status (2026-11-19)
+## Current status (2026-11-19) — Cycle 01 dispatched
 
-- Godot project bootstrap created on `dev`.
-- Initial worker issues #1–#4 created; implementation not started.
-- No PR merged; no Godot test run claimed.
+- Master inspected Issues #1–#4, `dev`, four worker branches and pull-request inventory.
+- Issues #1–#4 assigned to dedicated worker chats; each issue records branch, exclusive paths, expected tests, PR target `dev`, and explicit no-merge restrictions.
+- At audit, all four worker branches were 1 commit behind `dev`, 0 commits ahead, with no unique changes. Manager will fast-forward them to this coordination commit before development.
+- No worker implementation PRs existed at dispatch. No code tests have been executed or claimed by Master.
+- Master reserved `scenes/main.tscn`, `scripts/core/main.gd`, `project.godot` and this coordination file for integration only.
+- Status: `ASSIGNED / AWAITING WORKER IMPLEMENTATION`. Island 01 integrated acceptance remains `NOT RUN`; no merges approved.
+
+### Cycle 01 dispatch and gates
+
+| Issue | Branch | Status | Integration gate |
+|---|---|---|---|
+| #1 WORLD-001 | `world` | Assigned, awaiting PR | Scene root/marker contract, collision, Godot parse + world test evidence |
+| #2 PLAYER-001 | `player-combat` | Assigned, awaiting PR | Controller API/signals, shooting and damage tests, Godot parse evidence |
+| #3 AI-001 | `enemy-ai` | Assigned, awaiting PR | Patrol/LOS/death tests, dependency-free target lookup, Godot parse evidence |
+| #4 MISSION-001 | `missions-ui` | Assigned, awaiting PR | Valid/invalid state transitions, HUD signals, Godot parse evidence; final wiring waits for #1 and #2 |
+
+**Master review rule:** For every incoming PR inspect base=`dev`, head branch, exact changed file list, ownership boundaries, commit diff, review threads, checks and raw test evidence. Block incomplete or conflicting PRs. Verify cross-worker interface compatibility. Only after verification merge one PR at a time to `dev`, and re-evaluate the remaining PRs against the new `dev`. Never auto-merge to `main`.
+
+**Master integration backlog:** Wire Island 01 world, player, guard spawning, mission controller and HUD using only master-owned files. Execute actual Godot 4 integrated play loop: beach spawn → traverse → guard encounter → objective → extraction; test failure/invalid extraction too. Update issues and coordination only after execution evidence.
+
+**Proposed Cycle 02 (not yet dispatched):** Island 01 stability and integration regressions first; then WORLD-002, PLAYER-002, AI-002, UI-002, SAVE-001 as dependencies permit.
