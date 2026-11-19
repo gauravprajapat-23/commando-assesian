@@ -113,3 +113,17 @@ PR #9 merged into `dev` at `ebdbcfe9cc7649b45c3b134d88cefd79358c8182` after a cl
 All worker PRs remain drafts with no recorded approval. Merge approved worker PRs one at a time into `dev` and recheck the updated base after each merge. Merge the world and player contracts before the mission PR. Verify and approve the guard fixes separately.
 
 [INTEGRATION-001 #10](https://github.com/gauravprajapat-23/commando-assesian/issues/10) tracks Master-owned wiring and acceptance. The full playthrough, early extraction, player death, guard interaction, and HUD checks remain pending.
+
+## Cycle 01 integration — 2026-11-20
+
+- PR #5 merged into `dev` at `cbce65e181894586c85b2b655bdc1aadf2907d5e`. WORLD-001 passed with 39 colliders and the expected spawn/mission markers. Draft #11 exercised beach-to-outpost traversal and return in the combined candidate. Rendered landmark review remains in #10.
+- PR #6 merged into `dev` at `a7eac1aa9f5ff1c2dc67a2aa4559aaca8683613f`. PLAYER-001 passed after #5 landed. Draft #11 includes both world and actor layers in hitscan and verifies actual guard hits plus ammo and health HUD updates.
+- PR #7 ready for independent approval at `a2dade3afc4d172238881ea5104ba61f5a45ea76`. The test now checks `deaths[0]` and assigns a typed `Array[NodePath]`. Godot 4.6.3 clean import and all 13 guard assertions passed at the committed head against the post-#8 candidate. #11 depends on #7 landing in `dev`.
+- PR #8 merged into `dev` at `94de496416ac61543094d9fa7dec6fdd4290a4fb` after world and player landed and all four cumulative suites passed. Draft #11 verifies initial HUD binding, premature-extraction rejection, objective completion, success, and death handling.
+- Master wiring is in draft #11 at `8a46cfb1e8c8598f91cbef2532e5320ab476e8e5`. The local candidate used post-#8 dev plus the exact #7 head and the Master wiring. Godot 4.6.3 import, startup, five focused suites, and all 10 integration checks passed. The test physically traverses the route using injected player input. A separate encounter verifies actual guard damage and player hitscan. Review #7, land it in dev after approval, rerun the full gate on the resulting tree, then do a rendered keyboard/mouse playthrough and review #11. Cycle 02 remains queued behind acceptance.
+
+The repository owner explicitly authorized merges for #5, #6 and #8. GitHub rejected self-approval. Commit-anchored technical reviews documented the decisions and GitHub accepted the authorized sequential merges to dev. #7 awaits independent approval.
+
+### Cycle 02 queue
+
+Begin after #10 acceptance. First verify a clean rendered keyboard/mouse session, reproducible startup and mission replay, and a stable HUD at common resolutions. Then scope Android touch controls and safe-area checks under UI-002. Defer new islands, enemy expansions, and equipment until the Island 01 baseline is accepted.
