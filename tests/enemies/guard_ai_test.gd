@@ -57,7 +57,8 @@ func _run() -> void:
 	second.name = "PatrolB"
 	second.position = Vector3(0, 0, 3)
 	guard.add_child(second)
-	guard.patrol_points = [NodePath("PatrolA"), NodePath("PatrolB")]
+	var waypoints: Array[NodePath] = [NodePath("PatrolA"), NodePath("PatrolB")]
+	guard.patrol_points = waypoints
 	guard._patrol(0.016)
 	_assert(guard.patrol_index == 0 and guard.velocity.z < 0.0, "patrol heads toward first point")
 	first.position = Vector3.ZERO
@@ -91,7 +92,7 @@ func _run() -> void:
 	_assert(guard.state == GUARD_SCRIPT.State.DEAD and deaths[0] == 1, "lethal damage emits died once")
 	_assert(attacks[0] == 0, "no attacks after death")
 	guard.take_damage(10.0)
-	_assert(deaths == 1, "dead guard cannot die twice")
+	_assert(deaths[0] == 1, "dead guard cannot die twice")
 	root.queue_free()
 	await process_frame
 	if failures == 0:
