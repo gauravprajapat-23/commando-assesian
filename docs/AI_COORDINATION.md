@@ -12,13 +12,13 @@ Godot 4 third-person tactical action-adventure. A commando travels to distinct i
 
 | Agent | Branch | GitHub issue | Exclusive files | First delivery |
 |---|---|---|---|---|
-| Island World | `dev/world` | [WORLD-001 #1](https://github.com/gauravprajapat-23/commando-assesian/issues/1) | `scenes/world/**`, `scripts/world/**`, `assets/world/**`, `tests/world/**` | Island 01, markers, collision |
-| Player & Combat | `dev/player-combat` | [PLAYER-001 #2](https://github.com/gauravprajapat-23/commando-assesian/issues/2) | `scenes/player/**`, `scripts/player/**`, `assets/player/**`, `tests/player/**` | Third-person movement, shooting |
-| Enemies & AI | `dev/enemy-ai` | [AI-001 #3](https://github.com/gauravprajapat-23/commando-assesian/issues/3) | `scenes/enemies/**`, `scripts/enemies/**`, `assets/enemies/**`, `tests/enemies/**` | Guard patrol, detection, combat |
-| Missions & UI | `dev/missions-ui` | [MISSION-001 #4](https://github.com/gauravprajapat-23/commando-assesian/issues/4) | `scenes/missions/**`, `scripts/missions/**`, `scenes/ui/**`, `scripts/ui/**`, `tests/missions/**`, `tests/ui/**` | Mission state machine and HUD |
+| Island World | `world` | [WORLD-001 #1](https://github.com/gauravprajapat-23/commando-assesian/issues/1) | `scenes/world/**`, `scripts/world/**`, `assets/world/**`, `tests/world/**` | Island 01, markers, collision |
+| Player & Combat | `player-combat` | [PLAYER-001 #2](https://github.com/gauravprajapat-23/commando-assesian/issues/2) | `scenes/player/**`, `scripts/player/**`, `assets/player/**`, `tests/player/**` | Third-person movement, shooting |
+| Enemies & AI | `enemy-ai` | [AI-001 #3](https://github.com/gauravprajapat-23/commando-assesian/issues/3) | `scenes/enemies/**`, `scripts/enemies/**`, `assets/enemies/**`, `tests/enemies/**` | Guard patrol, detection, combat |
+| Missions & UI | `missions-ui` | [MISSION-001 #4](https://github.com/gauravprajapat-23/commando-assesian/issues/4) | `scenes/missions/**`, `scripts/missions/**`, `scenes/ui/**`, `scripts/ui/**`, `tests/missions/**`, `tests/ui/**` | Mission state machine and HUD |
 | Master Integrator | `dev` | integration follow-up | `scenes/main.tscn`, `scripts/core/main.gd`, `project.godot`, `docs/AI_COORDINATION.md` | Wire verified PRs, smoke test, update issues |
 
-All workers start from `dev` and create **pull requests with base `dev`**. Do not merge or push changes to `main`. Do not modify any shared/integration-only files or another agent's paths. On a contract change, comment on the owning Issue before editing.
+Worker branch names are top-level because Git cannot have both a `dev` ref and refs under `dev/`. All workers start from `dev` and create **pull requests with base `dev`**. Do not merge or push changes to `main`. Do not modify any shared/integration-only files or another agent's paths. On a contract change, comment on the owning Issue before editing.
 
 ## Cross-worker interfaces (v1)
 
