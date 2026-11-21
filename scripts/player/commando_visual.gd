@@ -23,6 +23,25 @@ var imported_model: Node3D
 var time_walk := 0.0
 var last_move_strength := 0.0
 var default_materials: Dictionary = {}
+var animation_player: AnimationPlayer
+var animation_clips: Dictionary = {}
+var active_animation: String = ""
+var action_timer: float = 0.0
+var fallback_reload: float = 0.0
+var fallback_fire: float = 0.0
+var has_died: bool = false
+
+# Alias matching supports common imported animation naming conventions.
+const CLIP_ALIASES := {
+    "idle": ["idle", "breathing", "stand"],
+    "walk": ["walk", "walking", "locomotion"],
+    "run": ["run", "running", "sprint"],
+    "crouch": ["crouch", "sneak", "crouched"],
+    "aim": ["aim", "rifle_idle", "ads"],
+    "reload": ["reload", "reloading"],
+    "fire": ["fire", "shoot", "firing"],
+    "death": ["death", "die", "dying"]
+}
 
 func _ready() -> void:
     var model_path := "res://assets/characters/commando.glb"
@@ -33,8 +52,86 @@ func _ready() -> void:
             if imported_model != null:
                 imported_model.name = "ImportedCommando"
                 add_child(imported_model)
+                animation_player = _find_animation_player(imported_model)
+                if animation_player != null:
+                    _detect_animations()
+                    _play_clip("idle", 0.0)
                 return
     _create_character()
+
+
+func _find_animation_player(node: Node) -> AnimationPlayer:
+    if node is AnimationPlayer:
+        return node as AnimationPlayer
+    for child in node.get_children():
+        var found := _find_animation_player(child)
+        if found != null:
+            return found
+    return null
+
+func _detect_animations() -> void:
+    animation_clips.clear()
+    if animation_player == null:
+        return
+    for clip_name in animation_player.get_animation_list():
+        var normalized := String(clip_name).to_lower().replace("-", "_").replace(" ", "_")
+        for state in CLIP_ALIASES.keys():
+            if animation_clips.has(state):
+                continue
+            for alias in CLIP_ALIASES[state]:
+                if normalized == alias or normalized.ends_with("/" + alias) or normalized.ends_with("|" + alias) or normalized.contains("_" + alias):
+                    animation_clips[state] = String(clip_name)
+                    break
+
+func _play_clip(state: String, blend: float = 0.18) -> void:
+    if animation_player == null or not animation_clips.has(state):
+        return
+    if state == active_animation and animation_player.is_playing():
+        return
+    active_animation = state
+    animation_player.play(StringName(animation_clips[state]), blend)
+
+func get_animation_state() -> String:
+    return active_animation
+
+func play_action(action: String) -> void:
+    if has_died:
+        return
+    if action == "fire":
+        action_timer = 0.15
+        fallback_fire = 0.15
+        _play_clip("fire", 0.08)
+    elif action == "reload":
+        fallback_reload = 1.0
+        _play_clip("reload", 0.12)
+    elif action == "death":
+        has_died = true
+        action_timer = 0.0
+        _play_clip("death", 0.08)
+
+func _animate_imported(delta: float, move_strength: float, sprinting: bool, aiming: bool, crouching: bool, dead: bool, reloading: bool) -> void:
+    if animation_player == null:
+        return
+    if dead or has_died:
+        _play_clip("death", 0.1)
+        return
+    if reloading and animation_clips.has("reload"):
+        _play_clip("reload", 0.1)
+        return
+    if action_timer > 0.0:
+        action_timer = maxf(0.0, action_timer - delta)
+        if animation_clips.has("fire"):
+            return
+    var desired := "idle"
+    if crouching:
+        desired = "crouch"
+    elif move_strength > 0.1:
+        desired = "run" if sprinting else "walk"
+    elif aiming:
+        desired = "aim"
+    if not animation_clips.has(desired):
+        desired = "walk" if move_strength > 0.1 and animation_clips.has("walk") else "idle"
+    _play_clip(desired)
 
 func _mat(color: Color, metallic: float = 0.0) -> StandardMaterial3D:
     var key := str(color) + "|" + str(metallic)
@@ -152,23 +249,35 @@ func _make_rifle() -> void:
     _box(weapon, "Magazine", Vector3(0, -0.16, -0.20), Vector3(0.082, 0.23, 0.13), METAL)
     _box(weapon, "Optic", Vector3(0, 0.11, -0.20), Vector3(0.075, 0.075, 0.16), GLASS)
 
-func animate_character(delta: float, move_strength: float, sprinting: bool, aiming: bool, crouching: bool, dead: bool) -> void:
+func animate_character(delta: float, move_strength: float, sprinting: bool, aiming: bool, crouching: bool, dead: bool, reloading: bool = false) -> void:
     if imported_model != null:
-        # Imported animated rigs should be driven by their own AnimationTree.
+        _animate_imported(delta, move_strength, sprinting, aiming, crouching, dead, reloading)
         return
     if body_root == null:
         return
     if dead:
-        body_root.rotation.z = lerpf(body_root.rotation.z, 1.25, delta * 3.0)
+        has_died = true
+        body_root.rotation.z = lerpf(body_root.rotation.z, 1.25, minf(1.0, delta * 3.0))
+        body_root.position.y = lerpf(body_root.position.y, -0.28, minf(1.0, delta * 3.0))
         return
     var intensity := clampf(move_strength, 0.0, 1.0)
     var speed := 12.0 if sprinting else 8.0
     time_walk += delta * speed * intensity
     var cycle := sin(time_walk) * intensity
-    var arm_swing := cycle * (0.35 if aiming else 0.58)
-    left_leg.rotation.x = lerpf(left_leg.rotation.x, cycle * 0.55, delta * 12.0)
-    right_leg.rotation.x = lerpf(right_leg.rotation.x, -cycle * 0.55, delta * 12.0)
-    left_arm.rotation.x = lerpf(left_arm.rotation.x, -0.48 - arm_swing, delta * 12.0)
-    right_arm.rotation.x = lerpf(right_arm.rotation.x, -0.48 + arm_swing, delta * 12.0)
-    body_root.position.y = lerpf(body_root.position.y, (-0.31 if crouching else 0.0) + absf(cycle) * 0.025, delta * 9.0)
-    body_root.rotation.z = lerpf(body_root.rotation.z, 0.0, delta * 9.0)
+    left_leg.rotation.x = lerpf(left_leg.rotation.x, cycle * 0.55, minf(1.0, delta * 12.0))
+    right_leg.rotation.x = lerpf(right_leg.rotation.x, -cycle * 0.55, minf(1.0, delta * 12.0))
+    var reloading_now := reloading or fallback_reload > 0.0
+    fallback_reload = maxf(0.0, fallback_reload - delta)
+    fallback_fire = maxf(0.0, fallback_fire - delta)
+    var arm_swing := cycle * (0.25 if aiming else 0.58)
+    var left_target := -0.65 if aiming else -0.48 - arm_swing
+    var right_target := -0.7 if aiming else -0.48 + arm_swing
+    if reloading_now:
+        left_target = -1.1 + sin(time_walk * 2.0) * 0.15
+        right_target = -0.95
+    elif fallback_fire > 0.0:
+        right_target -= 0.22
+    left_arm.rotation.x = lerpf(left_arm.rotation.x, left_target, minf(1.0, delta * 12.0))
+    right_arm.rotation.x = lerpf(right_arm.rotation.x, right_target, minf(1.0, delta * 12.0))
+    body_root.position.y = lerpf(body_root.position.y, (-0.31 if crouching else 0.0) + absf(cycle) * 0.025, minf(1.0, delta * 9.0))
+    body_root.rotation.z = lerpf(body_root.rotation.z, 0.0, minf(1.0, delta * 9.0))
