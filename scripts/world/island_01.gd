@@ -38,6 +38,27 @@ func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
 	material.roughness = 1.0
+	# Optional PBR ground assets. Do not require imported texture files for tests.
+	var albedo_path := ""
+	var normal_path := ""
+	if color == SAND:
+		albedo_path = "res://assets/realism/sand_albedo.png"
+		normal_path = "res://assets/realism/sand_normal.png"
+	elif color == GRASS:
+		albedo_path = "res://assets/realism/ground_albedo.png"
+		normal_path = "res://assets/realism/ground_normal.png"
+	if albedo_path != "" and ResourceLoader.exists(albedo_path):
+		var ground_texture := load(albedo_path) as Texture2D
+		if ground_texture != null:
+			material.albedo_color = Color.WHITE
+			material.albedo_texture = ground_texture
+			material.uv1_scale = Vector3(7.0, 7.0, 7.0)
+			material.uv1_triplanar = true
+	if normal_path != "" and ResourceLoader.exists(normal_path):
+		var normal_texture := load(normal_path) as Texture2D
+		if normal_texture != null:
+			material.normal_enabled = true
+			material.normal_texture = normal_texture
 	return material
 
 
