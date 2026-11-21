@@ -36,12 +36,17 @@ func _batch(name: String, source_mesh: Mesh, mat: Material, transforms: Array[Tr
     multimesh.transform_format = MultiMesh.TRANSFORM_3D
     multimesh.mesh = source_mesh
     multimesh.instance_count = transforms.size()
+    # Preserve the exact CPU-side transforms supplied to RenderingServer.
+    # Headless mode can return dummy values for MultiMesh GPU readbacks.
+    var placement_positions: Array[Vector3] = []
     for i in range(transforms.size()):
         multimesh.set_instance_transform(i, transforms[i])
+        placement_positions.append(transforms[i].origin)
     var node := MultiMeshInstance3D.new()
     node.name = name
     node.multimesh = multimesh
     node.material_override = mat
+    node.set_meta("placement_positions", placement_positions)
     add_child(node)
 
 func _build_foliage() -> void:
