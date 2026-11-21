@@ -41,8 +41,12 @@ var spectator_input_disabled: bool = false
 var _external_controls: bool = false
 var _control_state: Dictionary = {}
 var _base_collider_height: float = 1.8
+var _blocked_duration: float = 0.0
+var _blocked_reported: bool = false
 
 func _ready() -> void:
+    # Small ground irregularities should not disconnect horizontal movement.
+    floor_snap_length = 0.25
     health = maxf(max_health, 0.0)
     ammo = maxi(magazine_size, 0)
     reserve_ammo = maxi(starting_reserve, 0)
@@ -120,7 +124,9 @@ func _physics_process(delta: float) -> void:
             velocity.y = -0.1
     else:
         velocity.y -= gravity * delta
+    var movement_before: Vector3 = global_position
     move_and_slide()
+    _monitor_movement_block(delta, desired, movement_before)
     if desired.length_squared() > 0.001:
         body_visual.rotation.y = lerp_angle(body_visual.rotation.y, atan2(-desired.x, -desired.z) - rotation.y, minf(1.0, delta * 12.0))
     if body_visual.has_method("animate_character"):
@@ -129,6 +135,30 @@ func _physics_process(delta: float) -> void:
         start_reload()
     if bool(controls.get("fire", false)):
         try_fire()
+
+## Report where movement is truly blocked instead of silently appearing frozen.
+## Does not teleport through walls or interfere with mission collision.
+func _monitor_movement_block(delta: float, requested: Vector3, position_before: Vector3) -> void:
+    var traveled := Vector2(global_position.x - position_before.x, global_position.z - position_before.z).length()
+    if requested.length_squared() < 0.04 or traveled > 0.012 or not is_on_floor():
+        _blocked_duration = 0.0
+        _blocked_reported = false
+        return
+    _blocked_duration += delta
+    if _blocked_duration < 0.65 or _blocked_reported:
+        return
+    _blocked_reported = true
+    var blocker := "unknown collider"
+    for i in range(get_slide_collision_count()):
+        var collision := get_slide_collision(i)
+        if collision == null or absf(collision.get_normal().y) > 0.65:
+            continue
+        var body := collision.get_collider()
+        if body is Node:
+            blocker = (body as Node).get_path()
+            break
+    print("PLAYER MOVEMENT BLOCKED near ", global_position, " collider=", blocker,
+        " | Move around obstacle. If health is 0, guards defeated player.")
 
 func _set_crouched(enabled: bool) -> void:
     # Keep the collision capsule bottom at ground level.
@@ -199,6 +229,7 @@ func take_damage(amount: float) -> void:
     health_changed.emit(health, max_health)
     if health <= 0.0:
         is_dead = true
+        print("PLAYER DEFEATED: health reached zero; input stops intentionally.")
         is_reloading = false
         if body_visual.has_method("play_action"):
             body_visual.call("play_action", "death")
