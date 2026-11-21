@@ -181,9 +181,12 @@ func play_action(action: String) -> void:
     if has_died:
         return
     if action == "fire":
-        action_timer = 0.15
         fallback_fire = 0.15
-        _play_clip("fire", 0.08)
+        # A full-body Shoot clip interrupts running every 0.12s at weapon
+        # fire rate; avoid re-blending locomotion for each moving shot.
+        if last_move_strength < 0.15 and not _reloading_action:
+            action_timer = 0.12
+            _play_clip("fire", 0.06)
     elif action == "reload":
         fallback_reload = 1.0
         _reloading_action = true
@@ -351,6 +354,7 @@ func _make_rifle() -> void:
     _box(weapon, "Optic", Vector3(0, 0.11, -0.20), Vector3(0.075, 0.075, 0.16), GLASS)
 
 func animate_character(delta: float, move_strength: float, sprinting: bool, aiming: bool, crouching: bool, dead: bool, reloading: bool = false) -> void:
+    last_move_strength = move_strength
     if imported_model != null:
         _animate_imported(delta, move_strength, sprinting, aiming, crouching, dead, reloading)
         return
