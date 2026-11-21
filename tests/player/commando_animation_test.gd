@@ -34,7 +34,7 @@ func _verify() -> void:
     dummy.name = "DummyAnimationPlayer"
     visual.add_child(dummy)
     var library := AnimationLibrary.new()
-    for label in ["Idle", "Walk", "Running", "Crouch", "Aim", "Reload", "Shoot", "Death"]:
+    for label in ["aim_idle", "aim_walk", "crouch_idle", "crouch_walk", "Idle", "Walk", "Running", "Crouch", "Aim", "Reload", "Shoot", "Death"]:
         var animation := Animation.new()
         animation.length = 1.0
         library.add_animation(label, animation)
@@ -44,8 +44,11 @@ func _verify() -> void:
     visual.active_animation = ""
     visual.has_died = false
     visual._detect_animations()
-    for state in ["idle", "walk", "run", "crouch", "aim", "reload", "fire", "death"]:
+    for state in ["idle", "walk", "run", "crouch", "aim", "reload", "fire", "death", "crouch_walk", "aim_walk"]:
         _check(visual.animation_clips.has(state), "recognizes " + state + " animation")
+    _check(visual.animation_clips.get("idle", "") == "Idle", "composite aim_idle never replaces ordinary idle")
+    _check(visual.animation_clips.get("walk", "") == "Walk", "composite crouch_walk never replaces ordinary walk")
+    _check(visual.animation_clips.get("aim", "") == "aim_idle", "aim idle prefers dedicated aiming clip")
     visual._animate_imported(0.016, 0.0, false, false, false, false, false)
     _check(visual.get_animation_state() == "idle", "idle selected when standing")
     visual._animate_imported(0.016, 1.0, false, false, false, false, false)
@@ -54,6 +57,10 @@ func _verify() -> void:
     _check(visual.get_animation_state() == "run", "run selected when sprinting")
     visual._animate_imported(0.016, 0.0, false, true, false, false, false)
     _check(visual.get_animation_state() == "aim", "aim selected when stationary")
+    visual._animate_imported(0.016, 1.0, false, true, false, false, false)
+    _check(visual.get_animation_state() == "aim_walk", "moving while aiming uses aim walk")
+    visual._animate_imported(0.016, 1.0, false, false, true, false, false)
+    _check(visual.get_animation_state() == "crouch_walk", "crouch movement uses crouch walk")
     visual.play_action("reload")
     visual._animate_imported(0.016, 0.0, false, false, false, false, true)
     _check(visual.get_animation_state() == "reload", "reload overrides movement")
