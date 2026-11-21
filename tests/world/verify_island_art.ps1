@@ -76,6 +76,7 @@ try {
         "res://tests/world/military_compound_test.gd",
         "res://tests/world/ocean_atmosphere_test.gd",
         "res://tests/player/test_commando.gd",
+        "res://tests/player/commando_visual_test.gd",
         "res://tests/enemies/guard_ai_test.gd",
         "res://tests/missions/mission_controller_test.gd",
         "res://tests/ui/mission_hud_test.gd",
