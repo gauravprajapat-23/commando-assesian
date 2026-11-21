@@ -97,6 +97,8 @@ func _physics_process(delta: float) -> void:
     tick_combat(delta)
     if is_dead:
         velocity = Vector3.ZERO
+        if body_visual.has_method("animate_character"):
+            body_visual.call("animate_character", delta, 0.0, false, false, false, true, false)
         return
     var controls: Dictionary = _control_state if _external_controls else _native_state()
     var raw_move: Vector2 = controls.get("move", Vector2.ZERO)
@@ -122,7 +124,7 @@ func _physics_process(delta: float) -> void:
     if desired.length_squared() > 0.001:
         body_visual.rotation.y = lerp_angle(body_visual.rotation.y, atan2(-desired.x, -desired.z) - rotation.y, minf(1.0, delta * 12.0))
     if body_visual.has_method("animate_character"):
-        body_visual.call("animate_character", delta, move_input.length(), bool(controls.get("sprint", false)), bool(controls.get("aim", false)), crouched, is_dead)
+        body_visual.call("animate_character", delta, move_input.length(), bool(controls.get("sprint", false)), bool(controls.get("aim", false)), crouched, is_dead, is_reloading)
     if bool(controls.get("reload", false)):
         start_reload()
     if bool(controls.get("fire", false)):
@@ -154,6 +156,8 @@ func try_fire() -> bool:
         return false
     ammo -= 1
     _shot_cooldown = maxf(fire_interval, 0.0)
+    if body_visual.has_method("play_action"):
+        body_visual.call("play_action", "fire")
     ammo_changed.emit(ammo, reserve_ammo)
     var origin := camera.global_position
     var destination := origin - camera.global_basis.z * weapon_range
@@ -172,6 +176,8 @@ func start_reload() -> bool:
         return false
     is_reloading = true
     _reload_left = maxf(reload_duration, 0.0)
+    if body_visual.has_method("play_action"):
+        body_visual.call("play_action", "reload")
     if _reload_left <= 0.0:
         finish_reload()
     return true
@@ -194,6 +200,8 @@ func take_damage(amount: float) -> void:
     if health <= 0.0:
         is_dead = true
         is_reloading = false
+        if body_visual.has_method("play_action"):
+            body_visual.call("play_action", "death")
         died.emit()
 
 func get_team() -> String:
