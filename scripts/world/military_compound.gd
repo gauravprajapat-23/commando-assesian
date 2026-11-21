@@ -45,6 +45,22 @@ func _post(name: String, position: Vector3, height: float, radius: float, color:
 	add_child(node)
 	return node
 
+func _optional_model(path: String, holder: MeshInstance3D, visual_scale: Vector3) -> void:
+	# Attach a separately installed GLB under an existing decorative mesh.
+	# Geometry/collision contracts remain unchanged without extra plugins.
+	if not ResourceLoader.exists(path):
+		return
+	var source := load(path) as PackedScene
+	if source == null:
+		return
+	var imported := source.instantiate() as Node3D
+	if imported == null:
+		return
+	imported.name = "ImportedRealisticModel"
+	imported.scale = visual_scale
+	holder.add_child(imported)
+	holder.mesh = null
+
 func _tower(side: int) -> void:
 	var x := float(side) * 12.0
 	var prefix := "West" if side < 0 else "East"
@@ -64,7 +80,7 @@ func _tent(side: int) -> void:
 	var x := float(side) * 23.0
 	var prefix := "West" if side < 0 else "East"
 	_part(prefix + "TentDeck", Vector3(x, 0.12, -18), Vector3(7.6, 0.24, 6.4), SAND)
-	_part(prefix + "TentBody", Vector3(x, 1.6, -18), Vector3(6.4, 2.8, 5.4), CANVAS)
+	var tent_body := _part(prefix + "TentBody", Vector3(x, 1.6, -18), Vector3(6.4, 2.8, 5.4), CANVAS)
 	# Correct A-frame: both inner edges meet at the high ridge while
 	# the outer edges slope down over the tent body. Previously reversed.
 	var roof_l := _part(prefix + "TentRoofL", Vector3(x - 1.62, 3.98, -18), Vector3(4.0, 0.20, 6.3), CANVAS)
@@ -72,6 +88,13 @@ func _tent(side: int) -> void:
 	var roof_r := _part(prefix + "TentRoofR", Vector3(x + 1.62, 3.98, -18), Vector3(4.0, 0.20, 6.3), CANVAS)
 	roof_r.rotation.z = -0.55
 	_part(prefix + "TentRidgeCap", Vector3(x, 4.98, -18), Vector3(0.35, 0.16, 6.45), TRIM)
+	if ResourceLoader.exists("res://assets/realism/tent.glb"):
+		_optional_model("res://assets/realism/tent.glb", tent_body, Vector3.ONE)
+		roof_l.hide()
+		roof_r.hide()
+		var ridge := get_node_or_null(prefix + "TentRidgeCap") as MeshInstance3D
+		if ridge != null:
+			ridge.hide()
 	_part(prefix + "TentEntrance", Vector3(x, 1.5, -15.26), Vector3(1.6, 2.5, 0.10), TRIM)
 	for dz in [-2.6, 2.6]:
 		for dx in [-3.1, 3.1]:
@@ -80,13 +103,20 @@ func _tent(side: int) -> void:
 func _barracks() -> void:
 	# Exterior barracks, beyond east wall (wall occupies x~15), no new walls in combat yard.
 	_part("BarracksFoundation", Vector3(24.5, 0.22, -45), Vector3(10.0, 0.44, 12.0), SAND)
-	_part("BarracksBuilding", Vector3(24.5, 2.45, -45), Vector3(9.0, 4.1, 11.0), WALL)
+	var barracks_body := _part("BarracksBuilding", Vector3(24.5, 2.45, -45), Vector3(9.0, 4.1, 11.0), WALL)
 	# Pitched gable roof with a centered ridge (not a flat floating slab).
 	var left_roof := _part("BarracksRoof", Vector3(22.05, 5.31, -45), Vector3(5.65, 0.28, 12.2), TRIM)
 	left_roof.rotation.z = 0.43
 	var right_roof := _part("BarracksRoofRight", Vector3(26.95, 5.31, -45), Vector3(5.65, 0.28, 12.2), TRIM)
 	right_roof.rotation.z = -0.43
 	_part("BarracksRidgeCap", Vector3(24.5, 6.45, -45), Vector3(0.38, 0.19, 12.4), STEEL)
+	if ResourceLoader.exists("res://assets/realism/barracks.glb"):
+		_optional_model("res://assets/realism/barracks.glb", barracks_body, Vector3.ONE)
+		left_roof.hide()
+		right_roof.hide()
+		var ridge := get_node_or_null("BarracksRidgeCap") as MeshInstance3D
+		if ridge != null:
+			ridge.hide()
 	_part("BarracksDoor", Vector3(19.94, 1.5, -45), Vector3(0.13, 2.7, 1.6), STEEL)
 	for z in [-48.4, -41.6]:
 		_part("BarracksWindow_" + str(z), Vector3(19.9, 2.65, z), Vector3(0.14, 1.0, 1.9), TRIM)
