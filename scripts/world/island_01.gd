@@ -13,8 +13,13 @@ const ROCK := Color(0.39, 0.43, 0.40)
 const WATER := Color(0.15, 0.50, 0.62)
 const FLAG := Color(0.75, 0.20, 0.12)
 
+const OCEAN_ATMOSPHERE := preload("res://scripts/world/ocean_atmosphere.gd")
+
 func _ready() -> void:
 	_build_island()
+	var atmosphere := OCEAN_ATMOSPHERE.new()
+	atmosphere.name = "OceanAtmosphere"
+	add_child(atmosphere)
 
 
 func _material(color: Color) -> StandardMaterial3D:
