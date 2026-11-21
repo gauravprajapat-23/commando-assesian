@@ -31,7 +31,7 @@ func _verify() -> void:
         _check(forward.dot(target_direction) > 0.999, "preset " + str(number) + " frames target")
 
     camera.set_preset(1)
-    var original := camera.global_position
+    var original: Vector3 = camera.global_position
     var drag := InputEventMouseButton.new()
     drag.button_index = MOUSE_BUTTON_LEFT
     drag.pressed = true
