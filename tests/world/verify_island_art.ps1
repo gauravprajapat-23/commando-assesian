@@ -70,6 +70,7 @@ try {
 
     $tests = @(
         "res://tests/world/island_01_contract.gd",
+        "res://tests/world/world_preview_camera_test.gd",
         "res://tests/world/coastal_terrain_test.gd",
         "res://tests/world/jungle_foliage_test.gd",
         "res://tests/world/military_compound_test.gd",
