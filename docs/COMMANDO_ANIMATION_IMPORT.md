@@ -1,3 +1,49 @@
+# PLAYER-ANIM-03 — Installed soldier asset and import validation
+
+## First playable imported soldier
+
+For a reproducible first **skinned** model rather than the blocky procedural fallback, the branch includes a Windows installer for the three.js example Soldier GLB. It is a recognizable humanoid model with an actual skeleton and Idle/Walk/Run animation clips, **not a photorealistic military operator**. The original example identifies the model as Mixamo-derived; verify your use and redistribution rights for the underlying model before releasing your game. The installer deliberately does not commit or redistribute the binary.
+
+The source is [official three.js Soldier.glb](https://github.com/mrdoob/three.js/blob/dev/examples/models/gltf/Soldier.glb), and [official example](https://github.com/mrdoob/three.js/blob/dev/examples/webgl_animation_walk.html). This can be replaced by a properly licensed high-quality rigged tactical soldier later.
+
+**From PowerShell**:
+
+```powershell
+cd "C:\Users\gauravp\Projects\commando-assesian"
+git switch fix/godot-windows-runner-addon-isolation
+git fetch origin
+git pull --ff-only
+
+# Downloads model, validates GLB v2, skin + mesh + Idle/Walk animations,
+# writes provenance + SHA256 record locally:
+powershell -ExecutionPolicy Bypass -File .\tools\install_commando_starter.ps1
+
+# Import the new asset with the exact local Godot build.
+& "C:\Godot\Godot_v4.7.2-stable_win64_console.exe" --headless --editor --path . --import
+
+# Validate the actual imported skeleton and clips:
+& "C:\Godot\Godot_v4.7.2-stable_win64_console.exe" --headless --path . --script res://tests/player/commando_asset_test.gd
+
+# Then all 13+ gameplay/world suites:
+powershell -ExecutionPolicy Bypass -File .\tests\world\verify_island_art.ps1 -GodotExe "C:\Godot\Godot_v4.7.2-stable_win64.exe"
+```
+
+Installer refuses to overwrite a local `commando.glb` unless explicitly given `-Force`, and creates `assets/characters/commando.asset-source.txt` with SHA256 and origin details. The downloaded binary is on your PC; it is **not present in GitHub** yet.
+
+## Model placement and orientation
+
+The player scene loads `res://assets/characters/commando.glb` automatically. Inspect `BodyVisual` in game. Its imported visuals support three exported parameters in `scripts/player/commando_visual.gd`: `imported_model_scale` (default 1), `imported_model_yaw_degrees` (default 180), `imported_model_vertical_offset` (default 0). Set these on `BodyVisual` in Godot Inspector for different models. Keep the physics collider and CameraYaw unchanged.
+
+A `get_import_report()` method returns the model presence, skeleton bone count, recognized animation names, and current transform settings. If the GLB has no supported animation clips the procedural character remains the fallback.
+
+## About retargeting the full tactical animation set
+
+The current adapter plays embedded humanoid clips and maps common names. It does **not** magically retarget animations from a different skeleton to this one, and the three.js sample only establishes baseline Idle/Walk/Run. To add crouch, ADS, reload, fire and death, import clips **targeting the same skeleton** or use a compatible Godot Humanoid BoneMap / Blender retarget step and export one GLB with clips merged. Weapon grip and upper-body blending need a model-specific AnimationTree/IK setup; do not infer that these are verified until imported and visually tested.
+
+For final realistic art, use a licensed textured tactical soldier with appropriate bone weights, a compatible rig, gear and weapons rather than the three.js starter. Test from front, rear and sides in Godot and keep frame rate reasonable on Intel UHD 630.
+
+---
+
 # PLAYER-ANIM-02 — Rigged soldier integration (Godot 4.7)
 
 The player now has a visual animation adapter wired into the authoritative movement and combat controller. **A realistic character model is not included in the repository.** Without one, the native procedural tactical commando remains visible and uses lightweight motion for walking, running, aiming, reloading, firing and death.
