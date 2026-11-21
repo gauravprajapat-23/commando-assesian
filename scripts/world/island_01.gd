@@ -13,8 +13,25 @@ const ROCK := Color(0.39, 0.43, 0.40)
 const WATER := Color(0.15, 0.50, 0.62)
 const FLAG := Color(0.75, 0.20, 0.12)
 
+const COASTAL_TERRAIN := preload("res://scripts/world/coastal_terrain.gd")
+const JUNGLE_FOLIAGE := preload("res://scripts/world/jungle_foliage.gd")
+const MILITARY_COMPOUND := preload("res://scripts/world/military_compound.gd")
+const OCEAN_ATMOSPHERE := preload("res://scripts/world/ocean_atmosphere.gd")
+
 func _ready() -> void:
 	_build_island()
+	var coast := COASTAL_TERRAIN.new()
+	coast.name = "CoastalTerrain"
+	add_child(coast)
+	var jungle := JUNGLE_FOLIAGE.new()
+	jungle.name = "JungleFoliage"
+	add_child(jungle)
+	var compound := MILITARY_COMPOUND.new()
+	compound.name = "MilitaryCompound"
+	add_child(compound)
+	var atmosphere := OCEAN_ATMOSPHERE.new()
+	atmosphere.name = "OceanAtmosphere"
+	add_child(atmosphere)
 
 
 func _material(color: Color) -> StandardMaterial3D:
@@ -85,7 +102,7 @@ func _build_island() -> void:
 	_box("BeachLandingGround", Vector3(0, -1.0, 34), Vector3(94, 2, 32), SAND)
 	_box("JungleGround", Vector3(0, -1.5, -19), Vector3(94, 3, 78), GRASS)
 	# Water is a visual plane only: no surprise collision around the landing.
-	_box("ShallowWaterVisual", Vector3(0, -1.7, 64), Vector3(130, 0.15, 32), WATER, false)
+	# ISLAND-ART-05: avoid duplicate ocean plane; OceanAtmosphere supplies water.
 	# Forest on opposite sides creates cover while leaving x=-6..6 open.
 	for i in range(12):
 		var z_pos := -48.0 + float(i % 6) * 12.0
