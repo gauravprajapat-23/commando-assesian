@@ -55,8 +55,14 @@ func _ready() -> void:
                 animation_player = _find_animation_player(imported_model)
                 if animation_player != null:
                     _detect_animations()
-                    _play_clip("idle", 0.0)
-                return
+                    if not animation_clips.is_empty():
+                        _play_clip("idle", 0.0)
+                        return
+                # A static GLB is not a rigged animated soldier. Fall back to
+                # the functional procedural character rather than freezing.
+                imported_model.queue_free()
+                imported_model = null
+                animation_player = null
     _create_character()
 
 
@@ -74,7 +80,7 @@ func _detect_animations() -> void:
     if animation_player == null:
         return
     for clip_name in animation_player.get_animation_list():
-        var normalized := String(clip_name).to_lower().replace("-", "_").replace(" ", "_")
+        var normalized := String(clip_name).to_lower().replace("-", "_").replace(" ", "_").trim_suffix("_loop")
         for state in CLIP_ALIASES.keys():
             if animation_clips.has(state):
                 continue
