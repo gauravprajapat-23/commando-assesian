@@ -16,7 +16,7 @@ func _initialize() -> void:
 func _verify() -> void:
     var holder := Node3D.new()
     root.add_child(holder)
-    var camera := CAMERA_SCRIPT.new() as Camera3D
+    var camera = CAMERA_SCRIPT.new()
     camera.name = "WorldPreviewCamera"
     holder.add_child(camera)
     await process_frame
