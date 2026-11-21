@@ -99,19 +99,39 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
             return found
     return null
 
+# Prefer exact named clips so composite actions such as aim_idle cannot
+# accidentally satisfy ordinary idle, and crouch_walk cannot become walk.
+const CLIP_PREFERENCES := {
+    "idle": ["idle", "breathing", "stand"],
+    "walk": ["walk", "walking", "locomotion"],
+    "run": ["run", "running", "sprint"],
+    "crouch": ["crouch_idle", "crouch", "ready_crouch_idle", "sneak", "crouched"],
+    "crouch_walk": ["crouch_walk", "ready_crouch_walk", "mocap_crouch_f"],
+    "aim": ["aim_idle", "aim", "ready_idle", "rifle_idle", "ads"],
+    "aim_walk": ["aim_walk", "ready_walk"],
+    "aim_run": ["aim_run", "aim_sprint", "ready_run"],
+    "reload": ["reload", "reloading"],
+    "fire": ["shoot", "fire", "firing"],
+    "death": ["death", "die", "dying"]
+}
+
 func _detect_animations() -> void:
     animation_clips.clear()
     if animation_player == null:
         return
+    var available: Dictionary = {}
     for clip_name in animation_player.get_animation_list():
-        var normalized := String(clip_name).to_lower().replace("-", "_").replace(" ", "_").trim_suffix("_loop")
-        for state in CLIP_ALIASES.keys():
-            if animation_clips.has(state):
-                continue
-            for alias in CLIP_ALIASES[state]:
-                if normalized == alias or normalized.ends_with("/" + alias) or normalized.ends_with("|" + alias) or normalized.contains("_" + alias):
-                    animation_clips[state] = String(clip_name)
-                    break
+        var full_name := String(clip_name)
+        var base := full_name.get_slice("/", full_name.get_slice_count("/") - 1)
+        base = base.get_slice("|", base.get_slice_count("|") - 1)
+        var normalized := base.to_lower().replace("-", "_").replace(" ", "_").trim_suffix("_loop")
+        if not available.has(normalized):
+            available[normalized] = full_name
+    for state in CLIP_PREFERENCES.keys():
+        for candidate in CLIP_PREFERENCES[state]:
+            if available.has(candidate):
+                animation_clips[state] = available[candidate]
+                break
 
 func _play_clip(state: String, blend: float = 0.18) -> void:
     if animation_player == null or not animation_clips.has(state):
@@ -177,11 +197,16 @@ func _animate_imported(delta: float, move_strength: float, sprinting: bool, aimi
             return
     var desired := "idle"
     if crouching:
-        desired = "crouch"
+        desired = "crouch_walk" if move_strength > 0.1 and animation_clips.has("crouch_walk") else "crouch"
+    elif aiming:
+        if move_strength > 0.1:
+            desired = "aim_run" if sprinting and animation_clips.has("aim_run") else "aim_walk"
+            if not animation_clips.has(desired):
+                desired = "walk"
+        else:
+            desired = "aim"
     elif move_strength > 0.1:
         desired = "run" if sprinting else "walk"
-    elif aiming:
-        desired = "aim"
     if not animation_clips.has(desired):
         desired = "walk" if move_strength > 0.1 and animation_clips.has("walk") else "idle"
     _play_clip(desired)
