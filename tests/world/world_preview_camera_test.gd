@@ -25,7 +25,7 @@ func _verify() -> void:
     for number in range(1, 5):
         camera.set_preset(number)
         _check(camera.orbit_mode, "preset " + str(number) + " uses orbit mode")
-        _check(camera.orbit_distance >= camera.MIN_DISTANCE, "preset " + str(number) + " has valid distance")
+        _check(camera.orbit_distance >= 6.0, "preset " + str(number) + " has valid distance")
         var target_direction: Vector3 = (camera.focus_point - camera.global_position).normalized()
         var forward: Vector3 = -camera.global_basis.z
         _check(forward.dot(target_direction) > 0.999, "preset " + str(number) + " frames target")
