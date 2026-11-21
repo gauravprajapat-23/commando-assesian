@@ -31,6 +31,22 @@ func _verify() -> void:
     for name in ["idle", "walk", "run"]:
         _check(clips.has(name), "locomotion clip mapped: " + name)
     if bool(report.get("imported", false)):
+        var model := visual.get_node_or_null("ImportedCommando")
+        _check(model != null, "imported model present under BodyVisual")
+        var anim_player := visual.animation_player as AnimationPlayer
+        _check(anim_player != null, "AnimationPlayer was discovered")
+        if anim_player != null:
+            var bone_tracks := 0
+            for clip in anim_player.get_animation_list():
+                var animation := anim_player.get_animation(StringName(clip))
+                if animation == null:
+                    continue
+                for i in range(animation.get_track_count()):
+                    var kind := animation.track_get_type(i)
+                    if kind == Animation.TYPE_POSITION_3D or kind == Animation.TYPE_ROTATION_3D or kind == Animation.TYPE_SCALE_3D:
+                        if String(animation.track_get_path(i)).contains(":"):
+                            bone_tracks += 1
+            _check(bone_tracks > 0, "animation clips contain skeleton bone transform tracks")
         visual.animate_character(0.016, 0.0, false, false, false, false, false)
         _check(visual.get_animation_state() == "idle", "idle state plays")
         visual.animate_character(0.016, 1.0, false, false, false, false, false)
