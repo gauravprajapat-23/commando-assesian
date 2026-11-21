@@ -65,10 +65,13 @@ func _tent(side: int) -> void:
 	var prefix := "West" if side < 0 else "East"
 	_part(prefix + "TentDeck", Vector3(x, 0.12, -18), Vector3(7.6, 0.24, 6.4), SAND)
 	_part(prefix + "TentBody", Vector3(x, 1.6, -18), Vector3(6.4, 2.8, 5.4), CANVAS)
-	var roof_l := _part(prefix + "TentRoofL", Vector3(x - 1.62, 3.35, -18), Vector3(4.0, 0.20, 6.0), CANVAS)
-	roof_l.rotation.z = -0.55
-	var roof_r := _part(prefix + "TentRoofR", Vector3(x + 1.62, 3.35, -18), Vector3(4.0, 0.20, 6.0), CANVAS)
-	roof_r.rotation.z = 0.55
+	# Correct A-frame: both inner edges meet at the high ridge while
+	# the outer edges slope down over the tent body. Previously reversed.
+	var roof_l := _part(prefix + "TentRoofL", Vector3(x - 1.62, 3.98, -18), Vector3(4.0, 0.20, 6.3), CANVAS)
+	roof_l.rotation.z = 0.55
+	var roof_r := _part(prefix + "TentRoofR", Vector3(x + 1.62, 3.98, -18), Vector3(4.0, 0.20, 6.3), CANVAS)
+	roof_r.rotation.z = -0.55
+	_part(prefix + "TentRidgeCap", Vector3(x, 4.98, -18), Vector3(0.35, 0.16, 6.45), TRIM)
 	_part(prefix + "TentEntrance", Vector3(x, 1.5, -15.26), Vector3(1.6, 2.5, 0.10), TRIM)
 	for dz in [-2.6, 2.6]:
 		for dx in [-3.1, 3.1]:
@@ -78,7 +81,12 @@ func _barracks() -> void:
 	# Exterior barracks, beyond east wall (wall occupies x~15), no new walls in combat yard.
 	_part("BarracksFoundation", Vector3(24.5, 0.22, -45), Vector3(10.0, 0.44, 12.0), SAND)
 	_part("BarracksBuilding", Vector3(24.5, 2.45, -45), Vector3(9.0, 4.1, 11.0), WALL)
-	_part("BarracksRoof", Vector3(24.5, 4.65, -45), Vector3(10.0, 0.36, 12.0), TRIM)
+	# Pitched gable roof with a centered ridge (not a flat floating slab).
+	var left_roof := _part("BarracksRoof", Vector3(22.05, 5.31, -45), Vector3(5.65, 0.28, 12.2), TRIM)
+	left_roof.rotation.z = 0.43
+	var right_roof := _part("BarracksRoofRight", Vector3(26.95, 5.31, -45), Vector3(5.65, 0.28, 12.2), TRIM)
+	right_roof.rotation.z = -0.43
+	_part("BarracksRidgeCap", Vector3(24.5, 6.45, -45), Vector3(0.38, 0.19, 12.4), STEEL)
 	_part("BarracksDoor", Vector3(19.94, 1.5, -45), Vector3(0.13, 2.7, 1.6), STEEL)
 	for z in [-48.4, -41.6]:
 		_part("BarracksWindow_" + str(z), Vector3(19.9, 2.65, z), Vector3(0.14, 1.0, 1.9), TRIM)
