@@ -35,8 +35,8 @@ try {
             throw "Invalid GLB JSON chunk"
         }
         $jsonBytes = $reader.ReadBytes($jsonLength)
-        $asset = [Text.Encoding]::UTF8.GetString($jsonBytes).Trim([char]0, ' ') | ConvertFrom-Json
-        if (-not $asset.skins -or -not $asset.animations -or -not $asset.meshes) {
+        $asset = [Text.Encoding]::UTF8.GetString($jsonBytes).TrimEnd([char[]]@([char]0, [char]32)) | ConvertFrom-Json
+        if (@($asset.skins).Count -lt 1 -or @($asset.animations).Count -lt 1 -or @($asset.meshes).Count -lt 1) {
             throw "The source is not a skinned mesh with embedded animations"
         }
         $clips = @($asset.animations | ForEach-Object { $_.name })
@@ -49,7 +49,8 @@ try {
         $file.Dispose()
     }
     $hash = (Get-FileHash -LiteralPath $temp -Algorithm SHA256).Hash
-    Move-Item -LiteralPath $temp -Destination $target -Force
+    if ((Test-Path $target) -and $Force) { Remove-Item -LiteralPath $target -Force }
+    Move-Item -LiteralPath $temp -Destination $target
     $manifest = @"
 PLAYER-ANIM-03 external sample asset
 Downloaded from: $SourceUrl
