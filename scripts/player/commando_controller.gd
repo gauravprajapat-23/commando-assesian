@@ -35,6 +35,9 @@ var is_reloading: bool = false
 var _reload_left: float = 0.0
 var _shot_cooldown: float = 0.0
 var _pitch_angle: float = 0.0
+# Main scene disables these flags during F8 spectator inspection.
+var mouse_look_enabled: bool = true
+var spectator_input_disabled: bool = false
 var _external_controls: bool = false
 var _control_state: Dictionary = {}
 var _base_collider_height: float = 1.8
@@ -66,12 +69,15 @@ func inject_look(delta_yaw: float, delta_pitch: float) -> void:
     camera_pitch.rotation.x = _pitch_angle
 
 func _unhandled_input(event: InputEvent) -> void:
-    if is_dead or _external_controls:
+    if is_dead or _external_controls or not mouse_look_enabled or spectator_input_disabled:
         return
     if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
         inject_look(-event.relative.x * mouse_sensitivity, -event.relative.y * mouse_sensitivity)
 
 func _native_state() -> Dictionary:
+    # No world movement, aim or gunfire while F8 spectator camera is active.
+    if spectator_input_disabled:
+        return {"move": Vector2.ZERO, "jump": false, "sprint": false, "crouch": false, "aim": false, "fire": false, "reload": false}
     # Physical key polling requires no project InputMap modifications.
     var move := Vector2(
         float(Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_A)),
