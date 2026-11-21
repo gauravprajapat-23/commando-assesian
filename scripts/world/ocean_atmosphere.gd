@@ -73,6 +73,10 @@ func _create_atmosphere() -> void:
     environment.ambient_light_color = Color(0.72, 0.78, 0.74)
     environment.ambient_light_energy = 0.75
     environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+    # Standard depth fog is available in Compatibility; volumetric fog is not.
+    environment.fog_enabled = true
+    environment.fog_light_color = Color(0.49, 0.67, 0.70)
+    environment.fog_density = 0.004
     environment_node.environment = environment
     add_child(environment_node)
 
@@ -83,3 +87,10 @@ func _create_atmosphere() -> void:
     sunlight.light_energy = 0.8
     sunlight.shadow_enabled = false
     add_child(sunlight)
+
+    # Optional ambient audio hook, muted until a licensed local stream is set.
+    # No remote URLs and no asset-license ambiguity in this milestone.
+    var ambience := AudioStreamPlayer.new()
+    ambience.name = "AmbientAudio"
+    ambience.volume_db = -24.0
+    add_child(ambience)
