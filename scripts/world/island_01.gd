@@ -38,6 +38,27 @@ func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
 	material.roughness = 1.0
+	# Optional PBR ground assets. Do not require imported texture files for tests.
+	var albedo_path := ""
+	var normal_path := ""
+	if color == SAND:
+		albedo_path = "res://assets/realism/sand_albedo.png"
+		normal_path = "res://assets/realism/sand_normal.png"
+	elif color == GRASS:
+		albedo_path = "res://assets/realism/ground_albedo.png"
+		normal_path = "res://assets/realism/ground_normal.png"
+	if albedo_path != "" and ResourceLoader.exists(albedo_path):
+		var ground_texture := load(albedo_path) as Texture2D
+		if ground_texture != null:
+			material.albedo_color = Color.WHITE
+			material.albedo_texture = ground_texture
+			material.uv1_scale = Vector3(7.0, 7.0, 7.0)
+			material.uv1_triplanar = true
+	if normal_path != "" and ResourceLoader.exists(normal_path):
+		var normal_texture := load(normal_path) as Texture2D
+		if normal_texture != null:
+			material.normal_enabled = true
+			material.normal_texture = normal_texture
 	return material
 
 
@@ -91,9 +112,57 @@ func _cylinder(name: String, at: Vector3, radius: float, height: float, color: C
 
 
 func _tree(index: int, at: Vector3, tall: float) -> void:
-	_cylinder("PalmTrunk_%02d" % index, at + Vector3(0, tall * 0.5, 0), 0.40, tall, WOOD)
-	var canopy := _cylinder("PalmCrown_%02d" % index, at + Vector3(0, tall + 0.6, 0), 2.3, 1.2, LEAVES, false)
-	canopy.rotation_degrees.z = 8.0 * float(index % 3 - 1)
+	# Keep the original solid trunk footprint, but taper its visible cylinder.
+	var trunk := _cylinder("PalmTrunk_%02d" % index, at + Vector3(0, tall * 0.5, 0), 0.40, tall, WOOD)
+	var trunk_visual := trunk.get_child(0) as MeshInstance3D
+	var trunk_mesh := trunk_visual.mesh as CylinderMesh
+	trunk_mesh.top_radius = 0.23
+	trunk_mesh.bottom_radius = 0.50
+	trunk_mesh.radial_segments = 9
+
+	# Radial hanging palm leaves replace the horizontal, disk-like crown.
+	# All leaf geometry is visual only and built into one cheap mesh per tree.
+	var builder := SurfaceTool.new()
+	builder.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var frond_count := 9
+	for leaf in range(frond_count):
+		var angle := TAU * float(leaf) / float(frond_count) + float(index) * 0.31
+		var direction := Vector3(cos(angle), 0, sin(angle))
+		var across := Vector3(-direction.z, 0, direction.x)
+		var length := 3.1 + 0.35 * sin(float(leaf * 3 + index))
+		var a := Vector3(0, 0.28, 0)
+		var mid := direction * (length * 0.48) + Vector3(0, 0.45, 0)
+		var tip := direction * length + Vector3(0, -0.85, 0)
+		var side_a := mid + across * 0.58
+		var side_b := mid - across * 0.58
+		var tint := Color(0.11, 0.34, 0.13) if leaf % 2 == 0 else Color(0.20, 0.46, 0.17)
+		for point in [a, side_a, mid, a, mid, side_b, side_a, tip, mid, side_b, mid, tip]:
+			builder.set_color(tint)
+			builder.add_vertex(point)
+	builder.generate_normals()
+	var leaves := MeshInstance3D.new()
+	leaves.name = "PalmCrown_%02d" % index
+	leaves.position = at + Vector3(0, tall, 0)
+	leaves.mesh = builder.commit()
+	var leaf_material := _material(Color.WHITE)
+	leaf_material.vertex_color_use_as_albedo = true
+	leaf_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	leaves.material_override = leaf_material
+	add_child(leaves)
+	# Optional high-detail, locally supplied GLB palm model replaces only visuals.
+	# Original solid trunk stays active for unchanged navigation/combat collision.
+	var palm_path := "res://assets/realism/palm.glb"
+	if ResourceLoader.exists(palm_path):
+		var palm_asset := load(palm_path) as PackedScene
+		if palm_asset != null:
+			var palm_model := palm_asset.instantiate() as Node3D
+			if palm_model != null:
+				palm_model.name = "PalmVisual_%02d" % index
+				palm_model.position = at
+				palm_model.scale = Vector3.ONE * (tall / 6.0)
+				add_child(palm_model)
+				trunk_visual.hide()
+				leaves.hide()
 
 
 func _build_island() -> void:
@@ -125,7 +194,7 @@ func _build_island() -> void:
 	for i in range(4):
 		_box("OutpostCrate_%02d" % i, Vector3(-7 + float(i % 2) * 14, 0.9, -36 - float(i / 2) * 10), Vector3(2.5, 1.8, 2.5), WOOD)
 	# Distinct objective landmark and extraction identifier, no trigger logic.
-	_cylinder("ObjectiveMast", Vector3(0, 2.5, -44), 0.23, 5.0, METAL)
-	_box("ObjectiveFlag", Vector3(1.1, 4.25, -44), Vector3(2.2, 1.0, 0.12), FLAG, false)
+	_cylinder("ObjectiveMast", Vector3(3.6, 2.5, -44), 0.23, 5.0, METAL)
+	_box("ObjectiveFlag", Vector3(4.7, 4.25, -44), Vector3(2.2, 1.0, 0.12), FLAG, false)
 	_cylinder("ExtractionBeacon", Vector3(-24, 1.15, 35), 1.1, 2.3, METAL)
 	_box("ExtractionLamp", Vector3(-24, 2.6, 35), Vector3(1.5, 0.6, 1.5), FLAG, false)

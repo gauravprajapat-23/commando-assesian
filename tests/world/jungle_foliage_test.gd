@@ -44,11 +44,26 @@ func _run() -> void:
             continue
         _check(batch.multimesh.instance_count == expected[name], name + " has expected instances")
         _check(batch.material_override != null, name + " has material")
-        for i in range(batch.multimesh.instance_count):
-            var position := batch.multimesh.get_instance_transform(i).origin
+        # In --headless, RenderingServer-backed get_instance_transform() may
+        # return dummy positions. Validate CPU-side placement sent to MultiMesh.
+        var positions: Array = batch.get_meta("placement_positions", [])
+        _check(positions.size() == batch.multimesh.instance_count, name + " has matching CPU placement count")
+        for i in range(positions.size()):
+            var position: Vector3 = positions[i]
             _check(absf(position.x) >= 20.0, name + " keeps central corridor clear, index " + str(i))
             _check(position.z > -28.0 and position.z < 27.0, name + " stays clear of compound and landing, index " + str(i))
 
+    var canopy := foliage.get_node_or_null("JungleCanopies") as MultiMeshInstance3D
+    if canopy != null and canopy.multimesh != null:
+        var canopy_mesh := canopy.multimesh.mesh as ArrayMesh
+        _check(canopy_mesh != null, "tree crowns use custom radial leaf mesh")
+        if canopy_mesh != null:
+            _check(canopy_mesh.get_surface_count() == 1, "one shared canopy mesh surface")
+            var vertices: PackedVector3Array = canopy_mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+            _check(vertices.size() >= 60, "leaf clusters contain multiple fronds")
+
+    var first_palm := island.get_node_or_null("PalmCrown_00") as MeshInstance3D
+    _check(first_palm != null and first_palm.mesh is ArrayMesh, "foreground palm uses leaf mesh rather than disk")
     # Extra dressing never replaces original static collision/cover.
     for child in foliage.get_children():
         _check(child is MultiMeshInstance3D, "visual-only MultiMesh nodes (no new collision)")

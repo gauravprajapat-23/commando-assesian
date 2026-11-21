@@ -36,13 +36,40 @@ func _batch(name: String, source_mesh: Mesh, mat: Material, transforms: Array[Tr
     multimesh.transform_format = MultiMesh.TRANSFORM_3D
     multimesh.mesh = source_mesh
     multimesh.instance_count = transforms.size()
+    # Preserve the exact CPU-side transforms supplied to RenderingServer.
+    # Headless mode can return dummy values for MultiMesh GPU readbacks.
+    var placement_positions: Array[Vector3] = []
     for i in range(transforms.size()):
         multimesh.set_instance_transform(i, transforms[i])
+        placement_positions.append(transforms[i].origin)
     var node := MultiMeshInstance3D.new()
     node.name = name
     node.multimesh = multimesh
     node.material_override = mat
+    node.set_meta("placement_positions", placement_positions)
     add_child(node)
+
+func _palm_cluster_mesh() -> ArrayMesh:
+    # One lightweight shared mesh for all distant jungle tree crowns.
+    # Curved radial leaves read like foliage rather than stacked spheres.
+    var builder := SurfaceTool.new()
+    builder.begin(Mesh.PRIMITIVE_TRIANGLES)
+    for i in range(10):
+        var angle := TAU * float(i) / 10.0
+        var forward := Vector3(cos(angle), 0.0, sin(angle))
+        var sideways := Vector3(-forward.z, 0.0, forward.x)
+        var base := Vector3(0.0, 0.12, 0.0)
+        var upper := forward * 0.45 + Vector3.UP * 0.27
+        var tip := forward * 1.18 + Vector3.DOWN * 0.34
+        var left := upper + sideways * 0.26
+        var right := upper - sideways * 0.26
+        var color := Color(0.12, 0.37, 0.15) if i % 2 == 0 else Color(0.23, 0.48, 0.18)
+        for point in [base, left, upper, base, upper, right, left, tip, upper, right, upper, tip]:
+            builder.set_color(color)
+            builder.add_vertex(point)
+    builder.generate_normals()
+    return builder.commit()
+
 
 func _build_foliage() -> void:
     var trunks: Array[Transform3D] = []
@@ -82,7 +109,9 @@ func _build_foliage() -> void:
     crown_mesh.height = 2.0
     crown_mesh.radial_segments = 8
     crown_mesh.rings = 4
-    _batch("JungleCanopies", crown_mesh, _material(Color(0.14, 0.35, 0.17)), crowns)
+    var leaf_material := _material(Color.WHITE, true)
+    leaf_material.vertex_color_use_as_albedo = true
+    _batch("JungleCanopies", _palm_cluster_mesh(), leaf_material, crowns)
     _batch("JungleShrubs", crown_mesh, _material(Color(0.19, 0.43, 0.19)), bushes)
 
     var rock_mesh := SphereMesh.new()

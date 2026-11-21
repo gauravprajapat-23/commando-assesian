@@ -35,6 +35,9 @@ var is_reloading: bool = false
 var _reload_left: float = 0.0
 var _shot_cooldown: float = 0.0
 var _pitch_angle: float = 0.0
+# Main scene disables these flags during F8 spectator inspection.
+var mouse_look_enabled: bool = true
+var spectator_input_disabled: bool = false
 var _external_controls: bool = false
 var _control_state: Dictionary = {}
 var _base_collider_height: float = 1.8
@@ -66,12 +69,15 @@ func inject_look(delta_yaw: float, delta_pitch: float) -> void:
     camera_pitch.rotation.x = _pitch_angle
 
 func _unhandled_input(event: InputEvent) -> void:
-    if is_dead or _external_controls:
+    if is_dead or _external_controls or not mouse_look_enabled or spectator_input_disabled:
         return
     if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
         inject_look(-event.relative.x * mouse_sensitivity, -event.relative.y * mouse_sensitivity)
 
 func _native_state() -> Dictionary:
+    # No world movement, aim or gunfire while F8 spectator camera is active.
+    if spectator_input_disabled:
+        return {"move": Vector2.ZERO, "jump": false, "sprint": false, "crouch": false, "aim": false, "fire": false, "reload": false}
     # Physical key polling requires no project InputMap modifications.
     var move := Vector2(
         float(Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_A)),
@@ -91,6 +97,8 @@ func _physics_process(delta: float) -> void:
     tick_combat(delta)
     if is_dead:
         velocity = Vector3.ZERO
+        if body_visual.has_method("animate_character"):
+            body_visual.call("animate_character", delta, 0.0, false, false, false, true, false)
         return
     var controls: Dictionary = _control_state if _external_controls else _native_state()
     var raw_move: Vector2 = controls.get("move", Vector2.ZERO)
@@ -115,6 +123,8 @@ func _physics_process(delta: float) -> void:
     move_and_slide()
     if desired.length_squared() > 0.001:
         body_visual.rotation.y = lerp_angle(body_visual.rotation.y, atan2(-desired.x, -desired.z) - rotation.y, minf(1.0, delta * 12.0))
+    if body_visual.has_method("animate_character"):
+        body_visual.call("animate_character", delta, move_input.length(), bool(controls.get("sprint", false)), bool(controls.get("aim", false)), crouched, is_dead, is_reloading)
     if bool(controls.get("reload", false)):
         start_reload()
     if bool(controls.get("fire", false)):
@@ -146,6 +156,8 @@ func try_fire() -> bool:
         return false
     ammo -= 1
     _shot_cooldown = maxf(fire_interval, 0.0)
+    if body_visual.has_method("play_action"):
+        body_visual.call("play_action", "fire")
     ammo_changed.emit(ammo, reserve_ammo)
     var origin := camera.global_position
     var destination := origin - camera.global_basis.z * weapon_range
@@ -164,6 +176,8 @@ func start_reload() -> bool:
         return false
     is_reloading = true
     _reload_left = maxf(reload_duration, 0.0)
+    if body_visual.has_method("play_action"):
+        body_visual.call("play_action", "reload")
     if _reload_left <= 0.0:
         finish_reload()
     return true
@@ -186,6 +200,8 @@ func take_damage(amount: float) -> void:
     if health <= 0.0:
         is_dead = true
         is_reloading = false
+        if body_visual.has_method("play_action"):
+            body_visual.call("play_action", "death")
         died.emit()
 
 func get_team() -> String:

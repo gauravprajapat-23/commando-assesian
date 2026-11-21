@@ -8,6 +8,39 @@ const HUD := preload("res://scenes/ui/mission_hud.tscn")
 const WORLD_LAYER := 1
 const ACTOR_LAYER := 2
 
+# World preview camera is separated from player combat and UI input.
+const PREVIEW_CAMERA := preload("res://scripts/core/world_preview_camera.gd")
+var spectator_camera: Camera3D
+var spectator_enabled := false
+
+func _input(event: InputEvent) -> void:
+	# Preview toggle is handled before HUD can consume this key.
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+		_toggle_spectator()
+		get_viewport().set_input_as_handled()
+
+func _toggle_spectator() -> void:
+	spectator_enabled = not spectator_enabled
+	if is_instance_valid(player):
+		player.set("mouse_look_enabled", not spectator_enabled)
+		player.set("spectator_input_disabled", spectator_enabled)
+	if spectator_enabled:
+		if spectator_camera == null:
+			spectator_camera = PREVIEW_CAMERA.new() as Camera3D
+			spectator_camera.name = "WorldPreviewCamera"
+			add_child(spectator_camera)
+		# Start with a whole-island view so the user need not fly blindly.
+		if spectator_camera.has_method("set_preset"):
+			spectator_camera.call("set_preset", 1)
+		if spectator_camera.has_method("set_active"):
+			spectator_camera.call("set_active", true)
+		spectator_camera.make_current()
+	else:
+		if spectator_camera != null and spectator_camera.has_method("set_active"):
+			spectator_camera.call("set_active", false)
+		if is_instance_valid(player):
+			player.get_node("CameraYaw/CameraPitch/Camera3D").make_current()
+
 var player: CharacterBody3D
 var mission: CommandoMissionController
 
