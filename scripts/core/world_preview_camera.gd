@@ -67,7 +67,7 @@ func set_preset(number: int) -> void:
             global_position = Vector3(-116, 90, 80)
         _:
             return
-    var offset := global_position - focus_point
+    var offset: Vector3 = global_position - focus_point
     orbit_distance = clampf(offset.length(), MIN_DISTANCE, MAX_DISTANCE)
     orbit_yaw = atan2(offset.x, offset.z)
     orbit_pitch = asin(clampf(offset.y / orbit_distance, -1.0, 1.0))
@@ -75,7 +75,7 @@ func set_preset(number: int) -> void:
     _update_help()
 
 func _update_orbit() -> void:
-    var horizontal := cos(orbit_pitch) * orbit_distance
+    var horizontal: float = cos(orbit_pitch) * orbit_distance
     global_position = focus_point + Vector3(sin(orbit_yaw) * horizontal, sin(orbit_pitch) * orbit_distance, cos(orbit_yaw) * horizontal)
     look_at(focus_point, Vector3.UP)
 
@@ -129,7 +129,8 @@ func _input(event: InputEvent) -> void:
     elif event is InputEventMouseMotion and drag_button != 0:
         if orbit_mode:
             if drag_button == MOUSE_BUTTON_MIDDLE:
-                var lateral := global_basis.x * -event.relative.x + global_basis.y * event.relative.y
+                var motion: InputEventMouseMotion = event as InputEventMouseMotion
+                var lateral: Vector3 = global_basis.x * (-motion.relative.x) + global_basis.y * motion.relative.y
                 focus_point += lateral * orbit_distance * 0.0015
             else:
                 orbit_yaw -= event.relative.x * LOOK_SENSITIVITY
@@ -146,7 +147,7 @@ func _process(delta: float) -> void:
     var x := float(Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT)) - float(Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT))
     var z := float(Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN)) - float(Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP))
     var y := float(Input.is_key_pressed(KEY_E)) - float(Input.is_key_pressed(KEY_Q))
-    var direction := global_basis.x * x + global_basis.z * z + Vector3.UP * y
+    var direction: Vector3 = global_basis.x * x + global_basis.z * z + Vector3.UP * y
     if direction.length_squared() == 0.0:
         return
     var speed := fly_speed * (2.5 if Input.is_key_pressed(KEY_SHIFT) else 1.0)
