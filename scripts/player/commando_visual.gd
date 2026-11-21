@@ -60,6 +60,7 @@ func _ready() -> void:
                 add_child(imported_model)
                 animation_player = _find_animation_player(imported_model)
                 if animation_player != null:
+                    _load_compatible_action_library()
                     _detect_animations()
                     if not animation_clips.is_empty():
                         _play_clip("idle", 0.0)
@@ -70,6 +71,23 @@ func _ready() -> void:
                 imported_model = null
                 animation_player = null
     _create_character()
+
+
+func _load_compatible_action_library() -> void:
+    # An optional AnimationLibrary exported against THIS EXACT target skeleton.
+    # BoneMap retargeting happens at editor import time, not by renaming clips.
+    const ACTIONS_PATH := "res://assets/characters/commando_actions.tres"
+    if animation_player == null or not ResourceLoader.exists(ACTIONS_PATH):
+        return
+    var actions := load(ACTIONS_PATH) as AnimationLibrary
+    if actions == null:
+        push_warning("Commando action library is not an AnimationLibrary")
+        return
+    if animation_player.has_animation_library("combat"):
+        return
+    var err := animation_player.add_animation_library("combat", actions)
+    if err != OK:
+        push_warning("Could not add commando action library: " + str(err))
 
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
