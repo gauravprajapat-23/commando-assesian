@@ -8,70 +8,38 @@ const HUD := preload("res://scenes/ui/mission_hud.tscn")
 const WORLD_LAYER := 1
 const ACTOR_LAYER := 2
 
-# Debug-only spectator camera: F8 toggle, RMB look, arrows fly, Q/E descend/ascend.
-# Does not alter player or mission state, and is inactive until requested.
+# World preview camera is separated from player combat and UI input.
+const PREVIEW_CAMERA := preload("res://scripts/core/world_preview_camera.gd")
 var spectator_camera: Camera3D
 var spectator_enabled := false
-var spectator_dragging := false
-var spectator_speed := 18.0
-const SPECTATOR_SENSITIVITY := 0.003
 
 func _input(event: InputEvent) -> void:
-	# _input runs before HUD/GUI can consume mouse events. This also avoids
-	# racing the player's _unhandled_input on right-mouse drag.
+	# Preview toggle is handled before HUD can consume this key.
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
 		_toggle_spectator()
-		get_viewport().set_input_as_handled()
-		return
-	if not spectator_enabled or spectator_camera == null:
-		return
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			spectator_dragging = event.pressed
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if spectator_dragging else Input.MOUSE_MODE_VISIBLE
-			get_viewport().set_input_as_handled()
-		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			spectator_speed = minf(spectator_speed * 1.25, 120.0)
-			get_viewport().set_input_as_handled()
-		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			spectator_speed = maxf(spectator_speed / 1.25, 2.0)
-			get_viewport().set_input_as_handled()
-	elif event is InputEventMouseMotion and spectator_dragging:
-		spectator_camera.rotation.y -= event.relative.x * SPECTATOR_SENSITIVITY
-		spectator_camera.rotation.x = clampf(spectator_camera.rotation.x - event.relative.y * SPECTATOR_SENSITIVITY, -1.5, 1.5)
 		get_viewport().set_input_as_handled()
 
 func _toggle_spectator() -> void:
 	spectator_enabled = not spectator_enabled
-	spectator_dragging = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if is_instance_valid(player):
-		# Stop player orbit and shooting input while inspecting the world.
 		player.set("mouse_look_enabled", not spectator_enabled)
 		player.set("spectator_input_disabled", spectator_enabled)
 	if spectator_enabled:
 		if spectator_camera == null:
-			spectator_camera = Camera3D.new()
-			spectator_camera.name = "SpectatorCamera"
-			spectator_camera.far = 450.0
+			spectator_camera = PREVIEW_CAMERA.new() as Camera3D
+			spectator_camera.name = "WorldPreviewCamera"
 			add_child(spectator_camera)
-		var active := get_viewport().get_camera_3d()
-		if active != null and active != spectator_camera:
-			spectator_camera.global_transform = active.global_transform
+		# Start with a whole-island view so the user need not fly blindly.
+		if spectator_camera.has_method("set_preset"):
+			spectator_camera.call("set_preset", 1)
+		if spectator_camera.has_method("set_active"):
+			spectator_camera.call("set_active", true)
 		spectator_camera.make_current()
-	elif is_instance_valid(player):
-		player.get_node("CameraYaw/CameraPitch/Camera3D").make_current()
-
-func _process(delta: float) -> void:
-	if not spectator_enabled or spectator_camera == null:
-		return
-	# Arrows intentionally avoid WASD, which belongs to player movement.
-	var x := float(Input.is_key_pressed(KEY_RIGHT)) - float(Input.is_key_pressed(KEY_LEFT))
-	var z := float(Input.is_key_pressed(KEY_DOWN)) - float(Input.is_key_pressed(KEY_UP))
-	var y := float(Input.is_key_pressed(KEY_E)) - float(Input.is_key_pressed(KEY_Q))
-	var direction := spectator_camera.global_basis.x * x + spectator_camera.global_basis.z * z + Vector3.UP * y
-	if direction.length_squared() > 0.0:
-		spectator_camera.global_position += direction.normalized() * spectator_speed * delta
+	else:
+		if spectator_camera != null and spectator_camera.has_method("set_active"):
+			spectator_camera.call("set_active", false)
+		if is_instance_valid(player):
+			player.get_node("CameraYaw/CameraPitch/Camera3D").make_current()
 
 var player: CharacterBody3D
 var mission: CommandoMissionController
