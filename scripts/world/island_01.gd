@@ -13,8 +13,13 @@ const ROCK := Color(0.39, 0.43, 0.40)
 const WATER := Color(0.15, 0.50, 0.62)
 const FLAG := Color(0.75, 0.20, 0.12)
 
+const COASTAL_TERRAIN := preload("res://scripts/world/coastal_terrain.gd")
+
 func _ready() -> void:
 	_build_island()
+	var coast := COASTAL_TERRAIN.new()
+	coast.name = "CoastalTerrain"
+	add_child(coast)
 
 
 func _material(color: Color) -> StandardMaterial3D:
