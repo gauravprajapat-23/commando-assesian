@@ -3,3 +3,6 @@
 
 # Local editor plugins and addons (install separately on each machine)
 addons/
+
+# Generated editor-only snapshot; regenerate from Island 01 world scripts
+scenes/world/island_01_preview.tscn
