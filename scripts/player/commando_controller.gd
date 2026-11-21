@@ -121,6 +121,8 @@ func _physics_process(delta: float) -> void:
     move_and_slide()
     if desired.length_squared() > 0.001:
         body_visual.rotation.y = lerp_angle(body_visual.rotation.y, atan2(-desired.x, -desired.z) - rotation.y, minf(1.0, delta * 12.0))
+    if body_visual.has_method("animate_character"):
+        body_visual.call("animate_character", delta, move_input.length(), bool(controls.get("sprint", false)), bool(controls.get("aim", false)), crouched, is_dead)
     if bool(controls.get("reload", false)):
         start_reload()
     if bool(controls.get("fire", false)):
