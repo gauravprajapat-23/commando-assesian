@@ -3,6 +3,9 @@ extends Node3D
 ## Forward is -Z; feet at y=0. Existing CharacterBody3D physics remains separate.
 ## Optional art upgrade: res://assets/characters/commando.glb
 ## Model should face -Z, have feet at origin, and measure approx. 1.8 meters tall.
+@export var imported_model_scale: float = 1.0
+@export var imported_model_yaw_degrees: float = 180.0
+@export var imported_model_vertical_offset: float = 0.0
 
 const OLIVE := Color(0.24, 0.29, 0.19)
 const DARK_OLIVE := Color(0.14, 0.19, 0.13)
@@ -51,6 +54,9 @@ func _ready() -> void:
             imported_model = scene.instantiate() as Node3D
             if imported_model != null:
                 imported_model.name = "ImportedCommando"
+                imported_model.scale = Vector3.ONE * imported_model_scale
+                imported_model.rotation_degrees.y = imported_model_yaw_degrees
+                imported_model.position.y = imported_model_vertical_offset
                 add_child(imported_model)
                 animation_player = _find_animation_player(imported_model)
                 if animation_player != null:
@@ -99,6 +105,29 @@ func _play_clip(state: String, blend: float = 0.18) -> void:
 
 func get_animation_state() -> String:
     return active_animation
+
+func get_import_report() -> Dictionary:
+    var bones := 0
+    if imported_model != null:
+        var skeleton := _find_skeleton(imported_model)
+        if skeleton != null:
+            bones = skeleton.get_bone_count()
+    return {
+        "imported": imported_model != null,
+        "bones": bones,
+        "clips": animation_clips.duplicate(),
+        "scale": imported_model_scale,
+        "yaw_degrees": imported_model_yaw_degrees
+    }
+
+func _find_skeleton(node: Node) -> Skeleton3D:
+    if node is Skeleton3D:
+        return node as Skeleton3D
+    for child in node.get_children():
+        var skeleton := _find_skeleton(child)
+        if skeleton != null:
+            return skeleton
+    return null
 
 func play_action(action: String) -> void:
     if has_died:
