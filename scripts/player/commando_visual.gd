@@ -86,7 +86,7 @@ func _detect_animations() -> void:
 func _play_clip(state: String, blend: float = 0.18) -> void:
     if animation_player == null or not animation_clips.has(state):
         return
-    if state == active_animation and animation_player.is_playing():
+    if state == active_animation:
         return
     active_animation = state
     animation_player.play(StringName(animation_clips[state]), blend)
