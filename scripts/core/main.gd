@@ -16,30 +16,39 @@ var spectator_dragging := false
 var spectator_speed := 18.0
 const SPECTATOR_SENSITIVITY := 0.003
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
+	# _input runs before HUD/GUI can consume mouse events. This also avoids
+	# racing the player's _unhandled_input on right-mouse drag.
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
 		_toggle_spectator()
 		get_viewport().set_input_as_handled()
 		return
-	if not spectator_enabled:
+	if not spectator_enabled or spectator_camera == null:
 		return
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
-		spectator_dragging = event.pressed
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if spectator_dragging else Input.MOUSE_MODE_VISIBLE
-		get_viewport().set_input_as_handled()
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			spectator_dragging = event.pressed
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if spectator_dragging else Input.MOUSE_MODE_VISIBLE
+			get_viewport().set_input_as_handled()
+		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			spectator_speed = minf(spectator_speed * 1.25, 120.0)
+			get_viewport().set_input_as_handled()
+		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			spectator_speed = maxf(spectator_speed / 1.25, 2.0)
+			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and spectator_dragging:
 		spectator_camera.rotation.y -= event.relative.x * SPECTATOR_SENSITIVITY
 		spectator_camera.rotation.x = clampf(spectator_camera.rotation.x - event.relative.y * SPECTATOR_SENSITIVITY, -1.5, 1.5)
 		get_viewport().set_input_as_handled()
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-		spectator_speed = minf(spectator_speed * 1.25, 120.0)
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-		spectator_speed = maxf(spectator_speed / 1.25, 2.0)
 
 func _toggle_spectator() -> void:
 	spectator_enabled = not spectator_enabled
 	spectator_dragging = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if is_instance_valid(player):
+		# Stop player orbit and shooting input while inspecting the world.
+		player.mouse_look_enabled = not spectator_enabled
+		player.spectator_input_disabled = spectator_enabled
 	if spectator_enabled:
 		if spectator_camera == null:
 			spectator_camera = Camera3D.new()
