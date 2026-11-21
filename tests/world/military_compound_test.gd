@@ -32,6 +32,21 @@ func _verify() -> void:
         "CrateStrapA_0", "CrateStrapB_3"
     ]:
         _check(art.get_node_or_null(label) is MeshInstance3D, label + " decorative mesh exists")
+    # Roof planes must climb toward the center ridge, not slope outward.
+    for prefix in ["West", "East"]:
+        var roof_left := art.get_node_or_null(prefix + "TentRoofL") as MeshInstance3D
+        var roof_right := art.get_node_or_null(prefix + "TentRoofR") as MeshInstance3D
+        _check(roof_left != null and roof_right != null, prefix + " tent has both roof planes")
+        if roof_left != null and roof_right != null:
+            _check(roof_left.rotation.z > 0.1 and roof_right.rotation.z < -0.1, prefix + " tent roof slopes toward centered ridge")
+            _check(absf(roof_left.position.y - roof_right.position.y) < 0.01, prefix + " roof halves are aligned")
+        _check(art.get_node_or_null(prefix + "TentRidgeCap") is MeshInstance3D, prefix + " tent ridge cap exists")
+    var barracks_left := art.get_node_or_null("BarracksRoof") as MeshInstance3D
+    var barracks_right := art.get_node_or_null("BarracksRoofRight") as MeshInstance3D
+    _check(barracks_left != null and barracks_right != null, "barracks has two gable roof halves")
+    if barracks_left != null and barracks_right != null:
+        _check(barracks_left.rotation.z > 0.1 and barracks_right.rotation.z < -0.1, "barracks roof rises toward center")
+    _check(art.get_node_or_null("BarracksRidgeCap") is MeshInstance3D, "barracks ridge cap exists")
     # Godot may normalize a node name containing a floating-point suffix.
     # Check the required meshes at their real design coordinates instead.
     for x in [-12.0, 12.0]:
