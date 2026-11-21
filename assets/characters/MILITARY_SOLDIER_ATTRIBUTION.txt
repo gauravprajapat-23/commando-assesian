@@ -1,0 +1,11 @@
+﻿Third-party model: FREE [Military Soldier] RIGGED
+Author: BAMEN
+Original: https://sketchfab.com/3d-models/free-military-soldier-rigged-e9c56308a67d4a3db62e914fafa4d198
+Licence: Creative Commons Attribution 4.0 (CC BY 4.0)
+Licence text: https://creativecommons.org/licenses/by/4.0/
+Downloaded derivative from: https://raw.githubusercontent.com/cktang88/3d-fps/main/public/assets/models/characters/soldier.glb
+Derivative project: https://github.com/cktang88/3d-fps
+SHA256 of installed file: 6F229176B1CA49FF33605718EBFCCA7FCEE8F65D6D311CE3C86693DF9310D2D7
+Animation names: aim_crouch_idle, aim_crouch_walk, aim_idle, aim_run, aim_sprint, aim_walk, crouch_idle, crouch_walk, death, downed, heal, hit, idle, interact, jump_land, jump_loop, jump_start, melee, pickup, prone_crawl, prone_idle, ready_crouch_idle, ready_crouch_walk, ready_idle, ready_run, ready_sprint, ready_walk, reload, revive_kneel, revived, run, shoot, slide_exit, slide_loop, slide_start, sprint, throw, walk, mocap_walk_F@1.1733, mocap_walk_B@0.7285, mocap_walk_L@0.7455, mocap_walk_R@0.7148, mocap_jog_F@1.7529, mocap_jog_B@1.3664, mocap_run_F@2.8652, mocap_run2_F@2.0049, mocap_crouch_F@0.6906, mocap_crouch_B@0.5448, mocap_crouch_L@0.6225, mocap_crouch_R@0.6382
+Attribution and notice of modifications are required when distributing the game.
+The upstream derivative may have modifications relative to the original asset.
