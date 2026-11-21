@@ -128,6 +128,21 @@ func _tree(index: int, at: Vector3, tall: float) -> void:
 	leaf_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	leaves.material_override = leaf_material
 	add_child(leaves)
+	# Optional high-detail, locally supplied GLB palm model replaces only visuals.
+	# Original solid trunk stays active for unchanged navigation/combat collision.
+	var palm_path := "res://assets/realism/palm.glb"
+	if ResourceLoader.exists(palm_path):
+		var palm_asset := load(palm_path) as PackedScene
+		if palm_asset != null:
+			var palm_model := palm_asset.instantiate() as Node3D
+			if palm_model != null:
+				palm_model.name = "PalmVisual_%02d" % index
+				palm_model.position = at
+				palm_model.scale = Vector3.ONE * (tall / 6.0)
+				add_child(palm_model)
+				trunk_visual.hide()
+				leaves.hide()
+
 
 func _build_island() -> void:
 	# Broad flat collision slabs form a continuous beach-to-outpost walking route.
