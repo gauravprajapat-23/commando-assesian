@@ -10,14 +10,26 @@ This project is still **procedural low-poly by default**. A photorealistic look 
 - If the middle button is missing: **Editor > Editor Settings > Editors > 3D > Emulate 3 Button Mouse**; choose the appropriate 3D navigation scheme.
 - Select **Perspective** (not Top) for orbiting. The editor's orbit controls are separate from gameplay camera controls.
 
-## In-game inspection camera (new)
+## In-game world camera manager
 
-Run the main scene (F5), press **F8** to toggle an independent spectator camera. While enabled:
-- **Hold right mouse** and move to look around (release RMB to free the cursor).
-- **Arrow keys** fly; **Q / E** move down / up; mouse wheel adjusts flight speed.
-- Press **F8** again to return to player view.
+Run the game (F5) and press **F8**. This opens the entire island in **orbit mode**.
 
-This is a developer inspection tool, not a replacement for the player's camera.
+- **Hold left or right mouse** and drag to orbit around the island.
+- **Mouse wheel** zooms the camera in/out (free-fly mode changes flight speed instead).
+- **Middle mouse drag** pans the orbit target.
+- **1** = whole island, **2** = landing beach, **3** = military outpost, **4** = coast. **Home** resets overview.
+- **C** switches orbit / free-fly modes. In free-fly mode use **WASD or arrows** to move, **Q/E** to move vertically; **Shift** increases speed. Hold left or right mouse and move to change the free-fly look direction.
+- **F8** exits inspection and restores player movement and shooting.
+- An on-screen key guide appears only while preview is active.
+
+This mode is separate from the player camera: it does not advance objectives or alter spawn positions.
+
+## Saved cameras in the editor-only snapshot
+
+Regenerate `res://scenes/world/island_01_preview.tscn` using the script below. Expand `Island01 > PreviewCameras`. Five cameras are included:
+`01_WholeIsland`, `02_BeachLanding`, `03_MilitaryOutpost`, `04_CoastalSide`, `05_TopDown`.
+
+Select a camera and enable the **Preview** checkbox in the 3D viewport to see its framed view. Switch Preview off to return to the editor's free orbit camera. To orbit in the ordinary editor, use **middle mouse drag**, or **right mouse + WASD** to fly (Godot's built-in controls are not changed by gameplay scripts).
 
 ## Optional realistic GLB replacements
 
