@@ -55,6 +55,14 @@ func _verify() -> void:
     _check(visual.get_animation_state() == "walk", "walk selected when moving")
     visual._animate_imported(0.016, 1.0, true, false, false, false, false)
     _check(visual.get_animation_state() == "run", "run selected when sprinting")
+    var before_switches: int = visual.animation_switch_count
+    for i in range(30):
+        visual._animate_imported(0.016, 1.0, true, false, false, false, false)
+    _check(visual.animation_switch_count == before_switches, "steady sprint does not restart the animation")
+    visual.animate_character(0.016, 1.0, true, false, false, false, false)
+    var before_fire_switches: int = visual.animation_switch_count
+    visual.play_action("fire")
+    _check(visual.animation_switch_count == before_fire_switches, "shooting while running does not interrupt sprint")
     visual._animate_imported(0.016, 0.0, false, true, false, false, false)
     _check(visual.get_animation_state() == "aim", "aim selected when stationary")
     visual._animate_imported(0.016, 1.0, false, true, false, false, false)
