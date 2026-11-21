@@ -44,8 +44,12 @@ func _run() -> void:
             continue
         _check(batch.multimesh.instance_count == expected[name], name + " has expected instances")
         _check(batch.material_override != null, name + " has material")
-        for i in range(batch.multimesh.instance_count):
-            var position := batch.multimesh.get_instance_transform(i).origin
+        # In --headless, RenderingServer-backed get_instance_transform() may
+        # return dummy positions. Validate CPU-side placement sent to MultiMesh.
+        var positions: Array = batch.get_meta("placement_positions", [])
+        _check(positions.size() == batch.multimesh.instance_count, name + " has matching CPU placement count")
+        for i in range(positions.size()):
+            var position: Vector3 = positions[i]
             _check(absf(position.x) >= 20.0, name + " keeps central corridor clear, index " + str(i))
             _check(position.z > -28.0 and position.z < 27.0, name + " stays clear of compound and landing, index " + str(i))
 
