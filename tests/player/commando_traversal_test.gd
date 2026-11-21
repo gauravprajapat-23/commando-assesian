@@ -18,8 +18,9 @@ func _verify() -> void:
     var island := ISLAND.instantiate() as Node3D
     root.add_child(island)
     var player := PLAYER.instantiate() as CharacterBody3D
-    player.global_position = island.get_node("PlayerSpawn").global_position
     root.add_child(player)
+    # Node must be inside the SceneTree before writing global_position.
+    player.global_position = island.get_node("PlayerSpawn").global_position
     player.set_control_state({"move": Vector2.UP, "sprint": true})
     await physics_frame
     var start: Vector3 = player.global_position
