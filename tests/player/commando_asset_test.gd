@@ -30,6 +30,13 @@ func _verify() -> void:
     var clips: Dictionary = report.get("clips", {})
     for name in ["idle", "walk", "run"]:
         _check(clips.has(name), "locomotion clip mapped: " + name)
+    # Protect imported-model clip selection from the ambiguous suffix bug.
+    if clips.has("idle"):
+        _check(String(clips["idle"]).to_lower().ends_with("idle"), "idle uses an idle animation")
+    if clips.has("walk"):
+        _check(not String(clips["walk"]).to_lower().contains("crouch"), "walk does not use crouch walk")
+    if clips.has("crouch_walk"):
+        _check(String(clips["crouch_walk"]).to_lower().contains("crouch"), "crouch locomotion selects crouch clip")
     if bool(report.get("imported", false)):
         var model := visual.get_node_or_null("ImportedCommando")
         _check(model != null, "imported model present under BodyVisual")
