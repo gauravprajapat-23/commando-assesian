@@ -17,52 +17,52 @@ var spectator_speed := 18.0
 const SPECTATOR_SENSITIVITY := 0.003
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
-        _toggle_spectator()
-        get_viewport().set_input_as_handled()
-        return
-    if not spectator_enabled:
-        return
-    if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
-        spectator_dragging = event.pressed
-        Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if spectator_dragging else Input.MOUSE_MODE_VISIBLE
-        get_viewport().set_input_as_handled()
-    elif event is InputEventMouseMotion and spectator_dragging:
-        spectator_camera.rotation.y -= event.relative.x * SPECTATOR_SENSITIVITY
-        spectator_camera.rotation.x = clampf(spectator_camera.rotation.x - event.relative.y * SPECTATOR_SENSITIVITY, -1.5, 1.5)
-        get_viewport().set_input_as_handled()
-    elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-        spectator_speed = minf(spectator_speed * 1.25, 120.0)
-    elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-        spectator_speed = maxf(spectator_speed / 1.25, 2.0)
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F8:
+		_toggle_spectator()
+		get_viewport().set_input_as_handled()
+		return
+	if not spectator_enabled:
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		spectator_dragging = event.pressed
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if spectator_dragging else Input.MOUSE_MODE_VISIBLE
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseMotion and spectator_dragging:
+		spectator_camera.rotation.y -= event.relative.x * SPECTATOR_SENSITIVITY
+		spectator_camera.rotation.x = clampf(spectator_camera.rotation.x - event.relative.y * SPECTATOR_SENSITIVITY, -1.5, 1.5)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		spectator_speed = minf(spectator_speed * 1.25, 120.0)
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		spectator_speed = maxf(spectator_speed / 1.25, 2.0)
 
 func _toggle_spectator() -> void:
-    spectator_enabled = not spectator_enabled
-    spectator_dragging = false
-    Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-    if spectator_enabled:
-        if spectator_camera == null:
-            spectator_camera = Camera3D.new()
-            spectator_camera.name = "SpectatorCamera"
-            spectator_camera.far = 450.0
-            add_child(spectator_camera)
-        var active := get_viewport().get_camera_3d()
-        if active != null and active != spectator_camera:
-            spectator_camera.global_transform = active.global_transform
-        spectator_camera.make_current()
-    elif is_instance_valid(player):
-        player.get_node("CameraYaw/CameraPitch/Camera3D").make_current()
+	spectator_enabled = not spectator_enabled
+	spectator_dragging = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if spectator_enabled:
+		if spectator_camera == null:
+			spectator_camera = Camera3D.new()
+			spectator_camera.name = "SpectatorCamera"
+			spectator_camera.far = 450.0
+			add_child(spectator_camera)
+		var active := get_viewport().get_camera_3d()
+		if active != null and active != spectator_camera:
+			spectator_camera.global_transform = active.global_transform
+		spectator_camera.make_current()
+	elif is_instance_valid(player):
+		player.get_node("CameraYaw/CameraPitch/Camera3D").make_current()
 
 func _process(delta: float) -> void:
-    if not spectator_enabled or spectator_camera == null:
-        return
-    # Arrows intentionally avoid WASD, which belongs to player movement.
-    var x := float(Input.is_key_pressed(KEY_RIGHT)) - float(Input.is_key_pressed(KEY_LEFT))
-    var z := float(Input.is_key_pressed(KEY_DOWN)) - float(Input.is_key_pressed(KEY_UP))
-    var y := float(Input.is_key_pressed(KEY_E)) - float(Input.is_key_pressed(KEY_Q))
-    var direction := spectator_camera.global_basis.x * x + spectator_camera.global_basis.z * z + Vector3.UP * y
-    if direction.length_squared() > 0.0:
-        spectator_camera.global_position += direction.normalized() * spectator_speed * delta
+	if not spectator_enabled or spectator_camera == null:
+		return
+	# Arrows intentionally avoid WASD, which belongs to player movement.
+	var x := float(Input.is_key_pressed(KEY_RIGHT)) - float(Input.is_key_pressed(KEY_LEFT))
+	var z := float(Input.is_key_pressed(KEY_DOWN)) - float(Input.is_key_pressed(KEY_UP))
+	var y := float(Input.is_key_pressed(KEY_E)) - float(Input.is_key_pressed(KEY_Q))
+	var direction := spectator_camera.global_basis.x * x + spectator_camera.global_basis.z * z + Vector3.UP * y
+	if direction.length_squared() > 0.0:
+		spectator_camera.global_position += direction.normalized() * spectator_speed * delta
 
 var player: CharacterBody3D
 var mission: CommandoMissionController
