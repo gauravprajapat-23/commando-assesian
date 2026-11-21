@@ -155,7 +155,7 @@ func _monitor_movement_block(delta: float, requested: Vector3, position_before: 
             continue
         var body := collision.get_collider()
         if body is Node:
-            blocker = (body as Node).get_path()
+            blocker = str((body as Node).get_path())
             break
     print("PLAYER MOVEMENT BLOCKED near ", global_position, " collider=", blocker,
         " | Move around obstacle. If health is 0, guards defeated player.")
