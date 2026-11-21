@@ -194,7 +194,7 @@ func _build_island() -> void:
 	for i in range(4):
 		_box("OutpostCrate_%02d" % i, Vector3(-7 + float(i % 2) * 14, 0.9, -36 - float(i / 2) * 10), Vector3(2.5, 1.8, 2.5), WOOD)
 	# Distinct objective landmark and extraction identifier, no trigger logic.
-	_cylinder("ObjectiveMast", Vector3(0, 2.5, -44), 0.23, 5.0, METAL)
-	_box("ObjectiveFlag", Vector3(1.1, 4.25, -44), Vector3(2.2, 1.0, 0.12), FLAG, false)
+	_cylinder("ObjectiveMast", Vector3(3.6, 2.5, -44), 0.23, 5.0, METAL)
+	_box("ObjectiveFlag", Vector3(4.7, 4.25, -44), Vector3(2.2, 1.0, 0.12), FLAG, false)
 	_cylinder("ExtractionBeacon", Vector3(-24, 1.15, 35), 1.1, 2.3, METAL)
 	_box("ExtractionLamp", Vector3(-24, 2.6, 35), Vector3(1.5, 0.6, 1.5), FLAG, false)
