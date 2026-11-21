@@ -47,8 +47,8 @@ func _toggle_spectator() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if is_instance_valid(player):
 		# Stop player orbit and shooting input while inspecting the world.
-		player.mouse_look_enabled = not spectator_enabled
-		player.spectator_input_disabled = spectator_enabled
+		player.set("mouse_look_enabled", not spectator_enabled)
+		player.set("spectator_input_disabled", spectator_enabled)
 	if spectator_enabled:
 		if spectator_camera == null:
 			spectator_camera = Camera3D.new()
