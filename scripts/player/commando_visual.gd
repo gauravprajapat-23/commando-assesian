@@ -6,6 +6,10 @@ extends Node3D
 @export var imported_model_scale: float = 1.0
 @export var imported_model_yaw_degrees: float = 180.0
 @export var imported_model_vertical_offset: float = 0.0
+# Tuning for animation responsiveness and foot-sliding control.
+@export_range(0.04, 0.30, 0.01) var locomotion_blend_seconds: float = 0.10
+@export_range(0.5, 2.0, 0.05) var walk_animation_speed: float = 1.0
+@export_range(0.5, 2.0, 0.05) var run_animation_speed: float = 1.35
 
 const OLIVE := Color(0.24, 0.29, 0.19)
 const DARK_OLIVE := Color(0.14, 0.19, 0.13)
@@ -33,6 +37,8 @@ var action_timer: float = 0.0
 var fallback_reload: float = 0.0
 var fallback_fire: float = 0.0
 var has_died: bool = false
+var animation_switch_count: int = 0
+var _reloading_action := false
 
 # Alias matching supports common imported animation naming conventions.
 const CLIP_ALIASES := {
@@ -60,6 +66,8 @@ func _ready() -> void:
                 add_child(imported_model)
                 animation_player = _find_animation_player(imported_model)
                 if animation_player != null:
+                    # Sample animations on physics ticks, matching CharacterBody3D.
+                    animation_player.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS
                     _load_compatible_action_library()
                     _detect_animations()
                     if not animation_clips.is_empty():
@@ -139,7 +147,9 @@ func _play_clip(state: String, blend: float = 0.18) -> void:
     if state == active_animation:
         return
     active_animation = state
+    animation_switch_count += 1
     animation_player.play(StringName(animation_clips[state]), blend)
+    animation_player.speed_scale = 1.0
 
 func get_animation_state() -> String:
     return active_animation
@@ -176,6 +186,7 @@ func play_action(action: String) -> void:
         _play_clip("fire", 0.08)
     elif action == "reload":
         fallback_reload = 1.0
+        _reloading_action = true
         _play_clip("reload", 0.12)
     elif action == "death":
         has_died = true
@@ -189,8 +200,11 @@ func _animate_imported(delta: float, move_strength: float, sprinting: bool, aimi
         _play_clip("death", 0.1)
         return
     if reloading and animation_clips.has("reload"):
-        _play_clip("reload", 0.1)
+        _play_clip("reload", 0.10)
         return
+    if _reloading_action:
+        _reloading_action = false
+        active_animation = ""  # Allow locomotion to resume after reload.
     if action_timer > 0.0:
         action_timer = maxf(0.0, action_timer - delta)
         if animation_clips.has("fire"):
@@ -209,7 +223,16 @@ func _animate_imported(delta: float, move_strength: float, sprinting: bool, aimi
         desired = "run" if sprinting else "walk"
     if not animation_clips.has(desired):
         desired = "walk" if move_strength > 0.1 and animation_clips.has("walk") else "idle"
-    _play_clip(desired)
+    _play_clip(desired, locomotion_blend_seconds)
+    # Change playback rate without restarting the same locomotion clip.
+    # Avoid speeding up one-shot reload/shoot/death animations.
+    if animation_clips.has(desired) and active_animation == desired:
+        var target_speed := 1.0
+        if desired == "walk" or desired == "aim_walk" or desired == "crouch_walk":
+            target_speed = walk_animation_speed
+        elif desired == "run" or desired == "aim_run":
+            target_speed = run_animation_speed
+        animation_player.speed_scale = move_toward(animation_player.speed_scale, target_speed, delta * 3.0)
 
 func _mat(color: Color, metallic: float = 0.0) -> StandardMaterial3D:
     var key := str(color) + "|" + str(metallic)
