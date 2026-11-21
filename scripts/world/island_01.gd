@@ -13,8 +13,13 @@ const ROCK := Color(0.39, 0.43, 0.40)
 const WATER := Color(0.15, 0.50, 0.62)
 const FLAG := Color(0.75, 0.20, 0.12)
 
+const MILITARY_COMPOUND := preload("res://scripts/world/military_compound.gd")
+
 func _ready() -> void:
 	_build_island()
+	var compound := MILITARY_COMPOUND.new()
+	compound.name = "MilitaryCompound"
+	add_child(compound)
 
 
 func _material(color: Color) -> StandardMaterial3D:
