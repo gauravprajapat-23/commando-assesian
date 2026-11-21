@@ -79,6 +79,7 @@ try {
         "res://tests/player/commando_visual_test.gd",
         "res://tests/player/commando_animation_test.gd",
         "res://tests/player/commando_asset_test.gd",
+        "res://tests/player/commando_traversal_test.gd",
         "res://tests/enemies/guard_ai_test.gd",
         "res://tests/missions/mission_controller_test.gd",
         "res://tests/ui/mission_hud_test.gd",
