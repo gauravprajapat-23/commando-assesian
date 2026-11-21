@@ -31,6 +31,15 @@ Create `res://assets/realism/` and add these externally sourced files:
 | `tent.glb` | Two military canvas tent visuals | Entire tent model, centered at the tent's existing body origin |
 | `barracks.glb` | Barracks exterior visuals | Centered at the current building body origin |
 
+Optional tileable PBR textures (PNG, matching the listed names):
+
+| Optional file | Applied to |
+| --- | --- |
+| `sand_albedo.png`, `sand_normal.png` | Beach landing ground |
+| `ground_albedo.png`, `ground_normal.png` | Jungle ground |
+
+These automatically replace flat ground color using triplanar UVs when present. Use matching CC0 albedo and tangent-space normal maps; check normal-map orientation and import settings in Godot. Textures are not included in the repository.
+
 The optional models are *visual only*. Importing GLB files with collision nodes might introduce additional physics; use visual-only GLBs until a collision and line-of-sight pass is performed.
 
 **Important:** these paths are placeholders until YOU place actual licensed GLB files there. No photoreal asset is shipped by this branch. Because each model's pivot, dimensions, orientation and material UVs differ, inspect and adjust their import transforms inside Godot. The default world has fallback geometry, not an asset download dependency.
