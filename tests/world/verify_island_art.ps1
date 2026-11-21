@@ -24,7 +24,12 @@ try {
     }
     Write-Host "Godot: $GodotExe"
     & $GodotExe --version
-    if ($LASTEXITCODE -ne 0) { throw "Godot version check failed" }
+    # Some Windows GUI-subsystem Godot builds print --version but return
+    # a nonzero shell code. Treat this as diagnostic, not test evidence.
+    # The editor import and startup below are the actual hard gates.
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Godot --version returned exit code $LASTEXITCODE. Continuing to import for a definitive engine result."
+    }
     & $GodotExe --headless --editor --path . --import
     if ($LASTEXITCODE -ne 0) { throw "Godot editor import failed" }
     & $GodotExe --headless --path . --quit-after 3
